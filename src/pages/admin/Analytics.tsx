@@ -1,20 +1,24 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
-import { TrendingUp, TrendingDown, Package, ShoppingCart, DollarSign, CheckCircle, XCircle, Clock, Truck, CalendarIcon, GitCompare } from 'lucide-react';
+import { TrendingUp, TrendingDown, Package, ShoppingCart, DollarSign, CheckCircle, XCircle, Clock, Truck, CalendarIcon, GitCompare, Upload, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { format, subDays, subMonths, subYears, startOfDay, endOfDay, startOfMonth, subHours, subMinutes } from 'date-fns';
 import { ar } from 'date-fns/locale';
-
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 const statusLabels: Record<string, string> = {
   pending: 'معلق',
   confirmed: 'مؤكد',
@@ -90,6 +94,14 @@ export default function AdminAnalytics() {
   const [compare2StartDate, setCompare2StartDate] = useState<Date | undefined>(undefined);
   const [compare2EndDate, setCompare2EndDate] = useState<Date | undefined>(undefined);
 
+  // Excel upload state
+  const [excelDialogOpen, setExcelDialogOpen] = useState(false);
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [excelTargetStatus, setExcelTargetStatus] = useState<'delivered' | 'cancelled'>('delivered');
+  const [isProcessingExcel, setIsProcessingExcel] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (!loading && !roleLoading) {
       if (!user || !hasRole) navigate('/admin');
@@ -122,8 +134,9 @@ export default function AdminAnalytics() {
     const orders = ordersRes.data || [];
     const products = productsRes.data || [];
 
+    // Calculate revenue only from delivered orders
     const totalRevenue = orders
-      .filter(o => o.status !== 'cancelled')
+      .filter(o => o.status === 'delivered')
       .reduce((sum, o) => sum + (o.total_price || 0), 0);
 
     const statusCounts = orders.reduce((acc, o) => {
@@ -161,7 +174,7 @@ export default function AdminAnalytics() {
       cancelledOrders: statusCounts.cancelled || 0,
       statusData,
       topProducts,
-      avgOrderValue: orders.length > 0 ? totalRevenue / orders.filter(o => o.status !== 'cancelled').length : 0,
+      avgOrderValue: orders.filter(o => o.status === 'delivered').length > 0 ? totalRevenue / orders.filter(o => o.status === 'delivered').length : 0,
       orders
     };
   };
@@ -264,6 +277,82 @@ export default function AdminAnalytics() {
     return ((current - previous) / previous) * 100;
   };
 
+  const handleExcelUpload = async () => {
+    if (!excelFile) return;
+    
+    setIsProcessingExcel(true);
+    try {
+      const data = await excelFile.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json<any>(firstSheet);
+      
+      // Extract phone numbers from Excel - try common column names
+      const phoneNumbers: string[] = [];
+      jsonData.forEach((row: any) => {
+        const phone = row['phone'] || row['Phone'] || row['هاتف'] || row['رقم الهاتف'] || row['الهاتف'] || 
+                      row['telephone'] || row['mobile'] || row['رقم'] || Object.values(row)[0];
+        if (phone) {
+          // Normalize phone number (remove spaces, dashes, etc.)
+          const normalized = String(phone).replace(/[\s\-\(\)]/g, '').trim();
+          if (normalized) phoneNumbers.push(normalized);
+        }
+      });
+      
+      if (phoneNumbers.length === 0) {
+        toast.error('لم يتم العثور على أرقام هواتف في الملف');
+        return;
+      }
+      
+      const client = await getSupabase();
+      
+      // Get all orders and filter by phone numbers
+      const { data: orders, error: fetchError } = await client
+        .from('orders')
+        .select('id, customer_phone, status')
+        .neq('status', excelTargetStatus);
+      
+      if (fetchError) throw fetchError;
+      
+      // Match orders by phone number
+      const matchingOrders = orders?.filter(order => {
+        const orderPhone = order.customer_phone.replace(/[\s\-\(\)]/g, '').trim();
+        return phoneNumbers.some(phone => 
+          orderPhone.includes(phone) || phone.includes(orderPhone) ||
+          orderPhone === phone
+        );
+      }) || [];
+      
+      if (matchingOrders.length === 0) {
+        toast.info('لم يتم العثور على طلبات مطابقة');
+        return;
+      }
+      
+      // Update matching orders
+      const { error: updateError } = await client
+        .from('orders')
+        .update({ status: excelTargetStatus, updated_at: new Date().toISOString() })
+        .in('id', matchingOrders.map(o => o.id));
+      
+      if (updateError) throw updateError;
+      
+      toast.success(`تم تحديث ${matchingOrders.length} طلب إلى "${excelTargetStatus === 'delivered' ? 'تم التسليم' : 'ملغى'}"`);
+      
+      // Refresh analytics data
+      queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
+      
+      setExcelDialogOpen(false);
+      setExcelFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      
+    } catch (error) {
+      console.error('Excel processing error:', error);
+      toast.error('حدث خطأ أثناء معالجة الملف');
+    } finally {
+      setIsProcessingExcel(false);
+    }
+  };
+
   if (loading || supabaseLoading || roleLoading || !user || !hasRole) return null;
 
   return (
@@ -335,7 +424,7 @@ export default function AdminAnalytics() {
             </Popover>
 
             {/* Compare Mode Toggle */}
-            <div className="flex items-center gap-2 mr-auto border-r border-border pr-4">
+            <div className="flex items-center gap-2 border-r border-border pr-4">
               <GitCompare className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">مقارنة</span>
               <Switch checked={compareMode} onCheckedChange={(checked) => {
@@ -345,6 +434,19 @@ export default function AdminAnalytics() {
                   setCompare2EndDate(undefined);
                 }
               }} />
+            </div>
+
+            {/* Excel Upload Button */}
+            <div className="mr-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setExcelDialogOpen(true)}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                رفع ملف Excel
+              </Button>
             </div>
           </div>
           
@@ -626,6 +728,96 @@ export default function AdminAnalytics() {
           </>
         )}
       </div>
+
+      {/* Excel Upload Dialog */}
+      <Dialog open={excelDialogOpen} onOpenChange={setExcelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>رفع ملف Excel لتحديث حالات الطلبات</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-3">
+              <Label>اختر نوع التحديث:</Label>
+              <RadioGroup
+                value={excelTargetStatus}
+                onValueChange={(value) => setExcelTargetStatus(value as 'delivered' | 'cancelled')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="delivered" id="delivered" />
+                  <Label htmlFor="delivered" className="cursor-pointer flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    تم التسليم
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  <RadioGroupItem value="cancelled" id="cancelled" />
+                  <Label htmlFor="cancelled" className="cursor-pointer flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-red-500" />
+                    ملغى
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-3">
+              <Label>رفع ملف Excel:</Label>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={(e) => setExcelFile(e.target.files?.[0] || null)}
+                />
+                {excelFile ? (
+                  <div className="space-y-2">
+                    <FileSpreadsheet className="w-12 h-12 mx-auto text-green-500" />
+                    <p className="font-medium">{excelFile.name}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setExcelFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                    >
+                      إزالة
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground">اضغط لاختيار ملف أو اسحبه هنا</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      اختيار ملف
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                يجب أن يحتوي الملف على عمود لأرقام الهواتف. الأعمدة المدعومة: phone, هاتف, رقم الهاتف, الهاتف, telephone, mobile, رقم
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExcelDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button 
+              onClick={handleExcelUpload}
+              disabled={!excelFile || isProcessingExcel}
+            >
+              {isProcessingExcel ? 'جاري المعالجة...' : 'تحديث الطلبات'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
