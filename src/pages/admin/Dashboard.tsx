@@ -3,21 +3,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { Package, ShoppingCart, LogOut, LayoutDashboard } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, signOut, loading } = useAuth();
   const { supabase, loading: supabaseLoading } = useSupabase();
+  const { isAdmin, loading: adminLoading } = useAdminRole();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) navigate('/admin');
-  }, [user, loading, navigate]);
+    if (!loading && !adminLoading) {
+      if (!user) {
+        navigate('/admin');
+      } else if (!isAdmin) {
+        navigate('/admin');
+      }
+    }
+  }, [user, loading, isAdmin, adminLoading, navigate]);
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
-    enabled: !!user && !!supabase,
+    enabled: !!user && !!supabase && isAdmin,
     queryFn: async () => {
       const client = await getSupabase();
       const [products, orders, pendingOrders] = await Promise.all([
@@ -33,8 +41,8 @@ export default function AdminDashboard() {
     }
   });
 
-  if (loading || supabaseLoading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
-  if (!user) return null;
+  if (loading || supabaseLoading || adminLoading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">

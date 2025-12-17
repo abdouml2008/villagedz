@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,14 +18,17 @@ export default function AdminProducts() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { supabase, loading: supabaseLoading } = useSupabase();
+  const { isAdmin, loading: adminLoading } = useAdminRole();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '' });
 
   useEffect(() => {
-    if (!loading && !user) navigate('/admin');
-  }, [user, loading, navigate]);
+    if (!loading && !adminLoading) {
+      if (!user || !isAdmin) navigate('/admin');
+    }
+  }, [user, loading, isAdmin, adminLoading, navigate]);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -106,7 +110,7 @@ export default function AdminProducts() {
     setDialogOpen(true);
   };
 
-  if (loading || supabaseLoading || !user) return null;
+  if (loading || supabaseLoading || adminLoading || !user || !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
