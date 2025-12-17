@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
-import { useCart } from '@/hooks/useCart';
+import { useCart, getItemPrice } from '@/hooks/useCart';
 import { CartItem } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import { Wilaya } from '@/types/store';
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items: cartItems, totalPrice: cartTotalPrice, clearCart } = useCart();
+  const { items: cartItems, totalPrice: cartTotalPrice, totalDiscount: cartTotalDiscount, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
@@ -37,12 +37,16 @@ export default function Checkout() {
     return cartItems;
   }, [directItem, cartItems]);
 
-  const totalPrice = useMemo(() => {
+  const { totalPrice, totalDiscount } = useMemo(() => {
     if (directItem) {
-      return directItem.product.price * directItem.quantity;
+      const priceInfo = getItemPrice(directItem);
+      return { 
+        totalPrice: priceInfo.discountedPrice, 
+        totalDiscount: priceInfo.originalPrice - priceInfo.discountedPrice 
+      };
     }
-    return cartTotalPrice;
-  }, [directItem, cartTotalPrice]);
+    return { totalPrice: cartTotalPrice, totalDiscount: cartTotalDiscount };
+  }, [directItem, cartTotalPrice, cartTotalDiscount]);
 
   const { data: wilayas, isLoading: wilayasLoading } = useQuery({
     queryKey: ['wilayas'],
@@ -177,15 +181,30 @@ export default function Checkout() {
           <div className="bg-card rounded-xl p-6 shadow-village-md border border-border h-fit sticky top-24">
             <h2 className="text-xl font-bold mb-4">ملخص الطلب</h2>
             <div className="space-y-3 mb-4 max-h-60 overflow-auto">
-              {items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span>{item.product.name} x{item.quantity}</span>
-                  <span>{item.product.price * item.quantity} دج</span>
-                </div>
-              ))}
+              {items.map((item, i) => {
+                const priceInfo = getItemPrice(item);
+                return (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span>{item.product.name} x{item.quantity}</span>
+                    <div className="text-left">
+                      {priceInfo.hasDiscount ? (
+                        <>
+                          <span className="text-green-600">{priceInfo.discountedPrice.toFixed(0)} دج</span>
+                          <span className="text-muted-foreground line-through text-xs mr-1">{priceInfo.originalPrice.toFixed(0)}</span>
+                        </>
+                      ) : (
+                        <span>{priceInfo.originalPrice.toFixed(0)} دج</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <div className="border-t border-border pt-4 space-y-2">
-              <div className="flex justify-between"><span>المنتجات</span><span>{totalPrice} دج</span></div>
+              <div className="flex justify-between"><span>المنتجات</span><span>{(totalPrice + totalDiscount).toFixed(0)} دج</span></div>
+              {totalDiscount > 0 && (
+                <div className="flex justify-between text-green-600"><span>الخصم</span><span>-{totalDiscount.toFixed(0)} دج</span></div>
+              )}
               <div className="flex justify-between"><span>التوصيل</span><span>{deliveryPrice} دج</span></div>
               <div className="flex justify-between text-xl font-bold pt-2 border-t border-border">
                 <span>الإجمالي</span><span className="text-primary">{finalTotal} دج</span>

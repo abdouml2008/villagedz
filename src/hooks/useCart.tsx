@@ -2,6 +2,19 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { CartItem, Product } from '@/types/store';
 import { toast } from 'sonner';
 
+// Helper function to calculate item price with quantity discount
+export function getItemPrice(item: CartItem): { originalPrice: number; discountedPrice: number; hasDiscount: boolean; discountPercentage: number } {
+  const { product, quantity } = item;
+  const originalPrice = product.price * quantity;
+  
+  if (product.discount_quantity && product.discount_percentage && quantity >= product.discount_quantity) {
+    const discountedPrice = originalPrice * (1 - product.discount_percentage / 100);
+    return { originalPrice, discountedPrice, hasDiscount: true, discountPercentage: product.discount_percentage };
+  }
+  
+  return { originalPrice, discountedPrice: originalPrice, hasDiscount: false, discountPercentage: 0 };
+}
+
 interface CartContextType {
   items: CartItem[];
   addItem: (product: Product, quantity?: number, size?: string, color?: string) => void;
@@ -10,6 +23,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  totalDiscount: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -91,10 +105,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  
+  const { totalPrice, totalDiscount } = items.reduce((acc, item) => {
+    const { originalPrice, discountedPrice } = getItemPrice(item);
+    return {
+      totalPrice: acc.totalPrice + discountedPrice,
+      totalDiscount: acc.totalDiscount + (originalPrice - discountedPrice)
+    };
+  }, { totalPrice: 0, totalDiscount: 0 });
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, totalDiscount }}>
       {children}
     </CartContext.Provider>
   );
