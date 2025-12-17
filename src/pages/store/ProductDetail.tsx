@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useSupabase, getSupabase } from '@/hooks/useSupabase';
+import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,12 @@ import { Product } from '@/types/store';
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
-  const { supabase, loading: supabaseLoading } = useSupabase();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>();
   const [selectedColor, setSelectedColor] = useState<string>();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
-    enabled: !!supabase,
     queryFn: async () => {
       const client = await getSupabase();
       const { data, error } = await client
@@ -31,7 +29,7 @@ export default function ProductDetail() {
     }
   });
 
-  if (supabaseLoading || isLoading) {
+  if (isLoading) {
     return (
       <StoreLayout>
         <div className="container mx-auto px-4 py-8">
