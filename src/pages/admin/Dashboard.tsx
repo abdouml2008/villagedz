@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3 } from 'lucide-react';
 
@@ -12,6 +13,9 @@ export default function AdminDashboard() {
   const { supabase, loading: supabaseLoading } = useSupabase();
   const { hasRole, isAdmin, loading: roleLoading } = useHasAnyRole();
   const navigate = useNavigate();
+  
+  // Enable order notifications for admin
+  useOrderNotifications(!!user && hasRole);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
