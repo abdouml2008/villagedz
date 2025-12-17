@@ -1,17 +1,20 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Product, Category } from '@/types/store';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { supabase, loading: supabaseLoading } = useSupabase();
 
   const { data: category } = useQuery({
     queryKey: ['category', slug],
+    enabled: !!supabase,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const client = await getSupabase();
+      const { data, error } = await client
         .from('categories')
         .select('*')
         .eq('slug', slug)
@@ -23,9 +26,10 @@ export default function CategoryPage() {
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', category?.id],
-    enabled: !!category?.id,
+    enabled: !!category?.id && !!supabase,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const client = await getSupabase();
+      const { data, error } = await client
         .from('products')
         .select('*')
         .eq('category_id', category!.id)
@@ -34,6 +38,14 @@ export default function CategoryPage() {
       return data as Product[];
     }
   });
+
+  if (supabaseLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <StoreLayout>

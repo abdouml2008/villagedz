@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { Product, Category } from '@/types/store';
 export default function AdminProducts() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -27,23 +28,27 @@ export default function AdminProducts() {
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
+    enabled: !!supabase,
     queryFn: async () => {
-      const { data } = await supabase.from('categories').select('*');
+      const client = await getSupabase();
+      const { data } = await client.from('categories').select('*');
       return data as Category[];
     }
   });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['admin-products'],
-    enabled: !!user,
+    enabled: !!user && !!supabase,
     queryFn: async () => {
-      const { data } = await supabase.from('products').select('*, category:categories(*)').order('created_at', { ascending: false });
+      const client = await getSupabase();
+      const { data } = await client.from('products').select('*, category:categories(*)').order('created_at', { ascending: false });
       return data as (Product & { category: Category })[];
     }
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
+      const client = await getSupabase();
       const productData = {
         name: data.name,
         description: data.description || null,
@@ -54,10 +59,10 @@ export default function AdminProducts() {
         colors: data.colors ? data.colors.split(',').map(c => c.trim()) : []
       };
       if (editProduct) {
-        const { error } = await supabase.from('products').update(productData).eq('id', editProduct.id);
+        const { error } = await client.from('products').update(productData).eq('id', editProduct.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('products').insert(productData);
+        const { error } = await client.from('products').insert(productData);
         if (error) throw error;
       }
     },
@@ -72,7 +77,8 @@ export default function AdminProducts() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('products').delete().eq('id', id);
+      const client = await getSupabase();
+      const { error } = await client.from('products').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -100,7 +106,7 @@ export default function AdminProducts() {
     setDialogOpen(true);
   };
 
-  if (loading || !user) return null;
+  if (loading || supabaseLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
