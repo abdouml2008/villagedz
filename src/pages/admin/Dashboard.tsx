@@ -5,7 +5,7 @@ import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
-import { Package, ShoppingCart, LogOut, LayoutDashboard } from 'lucide-react';
+import { Package, ShoppingCart, LogOut, LayoutDashboard, Users } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, signOut, loading } = useAuth();
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/admin/products" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
             <Package className="w-12 h-12 text-primary mb-4" />
             <h2 className="text-2xl font-bold mb-2">إدارة المنتجات</h2>
@@ -105,6 +105,11 @@ export default function AdminDashboard() {
             <ShoppingCart className="w-12 h-12 text-accent mb-4" />
             <h2 className="text-2xl font-bold mb-2">إدارة الطلبات</h2>
             <p className="text-muted-foreground">عرض ومعالجة طلبات الزبائن</p>
+          </Link>
+          <Link to="/admin/users" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+            <Users className="w-12 h-12 text-destructive mb-4" />
+            <h2 className="text-2xl font-bold mb-2">إدارة المستخدمين</h2>
+            <p className="text-muted-foreground">إنشاء وإدارة حسابات المستخدمين</p>
           </Link>
         </div>
       </div>
