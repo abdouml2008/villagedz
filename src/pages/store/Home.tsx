@@ -31,6 +31,19 @@ export default function Home() {
     }
   });
 
+  const { data: totalProducts } = useQuery({
+    queryKey: ['total-products'],
+    queryFn: async () => {
+      const client = await getSupabase();
+      const { count, error } = await client
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
   const isLoading = categoriesLoading && productsLoading;
 
   return (
@@ -48,11 +61,6 @@ export default function Home() {
         }} />
         
         <div className="container mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium mb-6 animate-fade-in">
-            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-            شحن مجاني للطلبات فوق 5000 دج
-          </div>
-          
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
             مرحباً بكم في <span className="text-gradient">Village</span>
           </h1>
@@ -78,12 +86,12 @@ export default function Home() {
           {/* Stats */}
           <div className="flex flex-wrap justify-center gap-8 mt-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-gradient">58</span>
+              <span className="text-3xl md:text-4xl font-bold text-gradient">69</span>
               <p className="text-sm text-muted-foreground mt-1">ولاية توصيل</p>
             </div>
             <div className="w-px h-12 bg-border hidden sm:block" />
             <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-gradient">+1000</span>
+              <span className="text-3xl md:text-4xl font-bold text-gradient">{totalProducts || 0}</span>
               <p className="text-sm text-muted-foreground mt-1">منتج متاح</p>
             </div>
             <div className="w-px h-12 bg-border hidden sm:block" />
