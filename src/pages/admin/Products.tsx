@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowRight, Upload, X } from 'lucide-react';
 import { Product, Category } from '@/types/store';
 
 export default function AdminProducts() {
@@ -23,6 +23,10 @@ export default function AdminProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -50,15 +54,52 @@ export default function AdminProducts() {
     }
   });
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const client = await getSupabase();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    
+    const { error } = await client.storage.from('product-images').upload(fileName, file);
+    if (error) throw error;
+    
+    const { data: { publicUrl } } = client.storage.from('product-images').getPublicUrl(fileName);
+    return publicUrl;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
+      setUploading(true);
       const client = await getSupabase();
+      
+      let imageUrl = data.image_url;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+      
       const productData = {
         name: data.name,
         description: data.description || null,
         price: parseFloat(data.price),
         category_id: data.category_id || null,
-        image_url: data.image_url || null,
+        image_url: imageUrl || null,
         sizes: data.sizes ? data.sizes.split(',').map(s => s.trim()) : [],
         colors: data.colors ? data.colors.split(',').map(c => c.trim()) : []
       };
@@ -75,8 +116,12 @@ export default function AdminProducts() {
       toast.success(editProduct ? 'تم تحديث المنتج' : 'تمت إضافة المنتج');
       setDialogOpen(false);
       resetForm();
+      setUploading(false);
     },
-    onError: () => toast.error('حدث خطأ')
+    onError: (error: Error) => {
+      toast.error(`حدث خطأ: ${error.message}`);
+      setUploading(false);
+    }
   });
 
   const deleteMutation = useMutation({
@@ -99,6 +144,9 @@ export default function AdminProducts() {
   const resetForm = () => {
     setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '' });
     setEditProduct(null);
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const openEdit = (product: Product) => {
@@ -112,6 +160,9 @@ export default function AdminProducts() {
       sizes: product.sizes?.join(', ') || '',
       colors: product.colors?.join(', ') || ''
     });
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setDialogOpen(true);
   };
 
@@ -145,10 +196,59 @@ export default function AdminProducts() {
                     <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name_ar}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>رابط الصورة</Label><Input value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} placeholder="https://..." /></div>
+                
+                {/* Image Upload Section */}
+                <div>
+                  <Label>صورة المنتج</Label>
+                  <div className="mt-2 space-y-3">
+                    {(imagePreview || form.image_url) && (
+                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border">
+                        <img 
+                          src={imagePreview || form.image_url} 
+                          alt="معاينة" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { clearImage(); setForm({...form, image_url: ''}); }}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 ml-2" />
+                        رفع صورة
+                      </Button>
+                    </div>
+                    <div className="text-center text-xs text-muted-foreground">أو</div>
+                    <Input 
+                      value={form.image_url} 
+                      onChange={e => { setForm({...form, image_url: e.target.value}); clearImage(); }} 
+                      placeholder="https://... رابط الصورة"
+                    />
+                  </div>
+                </div>
+
                 <div><Label>المقاسات (مفصولة بفواصل)</Label><Input value={form.sizes} onChange={e => setForm({...form, sizes: e.target.value})} placeholder="S, M, L, XL" /></div>
                 <div><Label>الألوان (مفصولة بفواصل)</Label><Input value={form.colors} onChange={e => setForm({...form, colors: e.target.value})} placeholder="أسود, أبيض, أزرق" /></div>
-                <Button type="submit" disabled={saveMutation.isPending} className="w-full">{saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}</Button>
+                <Button type="submit" disabled={saveMutation.isPending || uploading} className="w-full">
+                  {uploading ? 'جاري رفع الصورة...' : saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
