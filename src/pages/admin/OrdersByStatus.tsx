@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,8 +8,8 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +21,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+const statusConfig: Record<string, { label: string; title: string }> = {
+  pending: { label: 'معلق', title: 'الطلبات المعلقة' },
+  confirmed: { label: 'مؤكد', title: 'الطلبات المؤكدة' },
+  shipped: { label: 'تم الشحن', title: 'الطلبات المشحونة' },
+  delivered: { label: 'تم التسليم', title: 'الطلبات المسلمة' },
+  cancelled: { label: 'ملغى', title: 'الطلبات الملغية' }
+};
 
 const statusLabels: Record<string, string> = {
   pending: 'معلق',
@@ -38,13 +46,13 @@ const statusColors: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-export default function AdminOrders() {
+export default function OrdersByStatus() {
+  const { status } = useParams<{ status: string }>();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { supabase, loading: supabaseLoading } = useSupabase();
   const { hasRole, loading: roleLoading } = useHasAnyRole();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<string>('pending');
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -53,55 +61,28 @@ export default function AdminOrders() {
   }, [user, loading, hasRole, roleLoading, navigate]);
 
   const { data: orders, isLoading } = useQuery({
-    queryKey: ['admin-orders', filter],
-    enabled: !!user && !!supabase,
+    queryKey: ['orders-by-status', status],
+    enabled: !!user && !!supabase && !!status,
     queryFn: async () => {
       const client = await getSupabase();
-      let query = client
+      const { data } = await client
         .from('orders')
         .select('*, wilaya:wilayas(*), items:order_items(*, product:products(*))')
+        .eq('status', status)
         .order('created_at', { ascending: false });
-      
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-      
-      const { data } = await query;
       return data as (Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] })[];
     }
   });
 
-  const { data: counts } = useQuery({
-    queryKey: ['orders-counts'],
-    enabled: !!user && !!supabase,
-    queryFn: async () => {
-      const client = await getSupabase();
-      const [pending, confirmed, shipped, delivered, cancelled] = await Promise.all([
-        client.from('orders').select('id', { count: 'exact' }).eq('status', 'pending'),
-        client.from('orders').select('id', { count: 'exact' }).eq('status', 'confirmed'),
-        client.from('orders').select('id', { count: 'exact' }).eq('status', 'shipped'),
-        client.from('orders').select('id', { count: 'exact' }).eq('status', 'delivered'),
-        client.from('orders').select('id', { count: 'exact' }).eq('status', 'cancelled'),
-      ]);
-      return {
-        pending: pending.count || 0,
-        confirmed: confirmed.count || 0,
-        shipped: shipped.count || 0,
-        delivered: delivered.count || 0,
-        cancelled: cancelled.count || 0
-      };
-    }
-  });
-
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, newStatus }: { id: string; newStatus: string }) => {
       const client = await getSupabase();
-      const { error } = await client.from('orders').update({ status }).eq('id', id);
+      const { error } = await client.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders-by-status'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['orders-counts'] });
       queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
       toast.success('تم تحديث الحالة');
     }
@@ -115,8 +96,8 @@ export default function AdminOrders() {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders-by-status'] });
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['orders-counts'] });
       queryClient.invalidateQueries({ queryKey: ['admin-analytics'] });
       toast.success('تم حذف الطلب');
     }
@@ -124,60 +105,19 @@ export default function AdminOrders() {
 
   if (loading || supabaseLoading || roleLoading || !user || !hasRole) return null;
 
+  const config = statusConfig[status || 'pending'];
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <AdminHeader title="إدارة الطلبات" />
+      <AdminHeader title={config?.title || 'الطلبات'} />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Status Quick Links */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Link to="/admin/orders/pending" className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors">
-            <Clock className="w-6 h-6 text-yellow-500 mb-2" />
-            <p className="text-sm text-muted-foreground">معلق</p>
-            <p className="text-2xl font-bold text-yellow-500">{counts?.pending || 0}</p>
-          </Link>
-          <Link to="/admin/orders/confirmed" className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20 hover:bg-blue-500/20 transition-colors">
-            <CheckCircle className="w-6 h-6 text-blue-500 mb-2" />
-            <p className="text-sm text-muted-foreground">مؤكد</p>
-            <p className="text-2xl font-bold text-blue-500">{counts?.confirmed || 0}</p>
-          </Link>
-          <Link to="/admin/orders/shipped" className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20 hover:bg-purple-500/20 transition-colors">
-            <Truck className="w-6 h-6 text-purple-500 mb-2" />
-            <p className="text-sm text-muted-foreground">مشحون</p>
-            <p className="text-2xl font-bold text-purple-500">{counts?.shipped || 0}</p>
-          </Link>
-          <Link to="/admin/orders/delivered" className="bg-green-500/10 rounded-xl p-4 border border-green-500/20 hover:bg-green-500/20 transition-colors">
-            <Package className="w-6 h-6 text-green-500 mb-2" />
-            <p className="text-sm text-muted-foreground">مسلم</p>
-            <p className="text-2xl font-bold text-green-500">{counts?.delivered || 0}</p>
-          </Link>
-          <Link to="/admin/orders/cancelled" className="bg-red-500/10 rounded-xl p-4 border border-red-500/20 hover:bg-red-500/20 transition-colors">
-            <XCircle className="w-6 h-6 text-red-500 mb-2" />
-            <p className="text-sm text-muted-foreground">ملغى</p>
-            <p className="text-2xl font-bold text-red-500">{counts?.cancelled || 0}</p>
-          </Link>
-        </div>
-
-        {/* Filter */}
-        <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-2xl font-bold">الطلبات ({orders?.length || 0})</h2>
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">الكل</SelectItem>
-              <SelectItem value="pending">معلق</SelectItem>
-              <SelectItem value="confirmed">مؤكد</SelectItem>
-              <SelectItem value="shipped">مشحون</SelectItem>
-              <SelectItem value="delivered">مسلم</SelectItem>
-              <SelectItem value="cancelled">ملغى</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <h2 className="text-2xl font-bold mb-6">{config?.title} ({orders?.length || 0})</h2>
 
         {isLoading ? (
           <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="bg-card h-32 rounded-xl animate-pulse" />)}</div>
         ) : orders?.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد طلبات</div>
+          <div className="text-center py-12 text-muted-foreground">لا توجد طلبات {config?.label}</div>
         ) : (
           <div className="space-y-4">
             {orders?.map(order => (
@@ -208,7 +148,7 @@ export default function AdminOrders() {
 
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className={`px-3 py-1 rounded-full text-sm ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
-                  <Select value={order.status} onValueChange={status => updateStatus.mutate({ id: order.id, status })}>
+                  <Select value={order.status} onValueChange={newStatus => updateStatus.mutate({ id: order.id, newStatus })}>
                     <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(statusLabels).map(([value, label]) => (
