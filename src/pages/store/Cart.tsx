@@ -44,11 +44,19 @@ export default function Cart() {
                   {item.size && <p className="text-sm text-muted-foreground">المقاس: {item.size}</p>}
                   {item.color && <p className="text-sm text-muted-foreground">اللون: {item.color}</p>}
                   <div className="flex items-center gap-2 mt-2">
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.size, item.color)} className="p-1 rounded border border-border hover:bg-secondary">
+                    <button 
+                      onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.size, item.color)} 
+                      className="p-1 rounded border border-border hover:bg-secondary disabled:opacity-50"
+                      disabled={item.quantity <= (item.product.min_quantity || 1)}
+                    >
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-8 text-center">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.size, item.color)} className="p-1 rounded border border-border hover:bg-secondary">
+                    <button 
+                      onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.size, item.color)} 
+                      className="p-1 rounded border border-border hover:bg-secondary disabled:opacity-50"
+                      disabled={item.product.max_quantity ? item.quantity >= item.product.max_quantity : false}
+                    >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>

@@ -23,7 +23,7 @@ export default function AdminProducts() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '' });
+  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -102,7 +102,9 @@ export default function AdminProducts() {
         category_id: data.category_id || null,
         image_url: imageUrl || null,
         sizes: data.sizes ? data.sizes.split(',').map(s => s.trim()) : [],
-        colors: data.colors ? data.colors.split(',').map(c => c.trim()) : []
+        colors: data.colors ? data.colors.split(',').map(c => c.trim()) : [],
+        min_quantity: data.min_quantity ? parseInt(data.min_quantity) : 1,
+        max_quantity: data.max_quantity ? parseInt(data.max_quantity) : null
       };
       if (editProduct) {
         const { error } = await client.from('products').update(productData).eq('id', editProduct.id);
@@ -143,7 +145,7 @@ export default function AdminProducts() {
   });
 
   const resetForm = () => {
-    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '' });
+    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '' });
     setEditProduct(null);
     setImageFile(null);
     setImagePreview(null);
@@ -159,7 +161,9 @@ export default function AdminProducts() {
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       sizes: product.sizes?.join(', ') || '',
-      colors: product.colors?.join(', ') || ''
+      colors: product.colors?.join(', ') || '',
+      min_quantity: product.min_quantity?.toString() || '1',
+      max_quantity: product.max_quantity?.toString() || ''
     });
     setImageFile(null);
     setImagePreview(null);
@@ -242,6 +246,10 @@ export default function AdminProducts() {
 
                 <div><Label>المقاسات (مفصولة بفواصل)</Label><Input value={form.sizes} onChange={e => setForm({...form, sizes: e.target.value})} placeholder="S, M, L, XL" /></div>
                 <div><Label>الألوان (مفصولة بفواصل)</Label><Input value={form.colors} onChange={e => setForm({...form, colors: e.target.value})} placeholder="أسود, أبيض, أزرق" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><Label>الحد الأدنى للكمية</Label><Input type="number" min="1" value={form.min_quantity} onChange={e => setForm({...form, min_quantity: e.target.value})} placeholder="1" /></div>
+                  <div><Label>الحد الأقصى للكمية</Label><Input type="number" min="1" value={form.max_quantity} onChange={e => setForm({...form, max_quantity: e.target.value})} placeholder="غير محدود" /></div>
+                </div>
                 <Button type="submit" disabled={saveMutation.isPending || uploading} className="w-full">
                   {uploading ? 'جاري رفع الصورة...' : saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
                 </Button>

@@ -19,6 +19,8 @@ export interface Product {
   colors: string[];
   stock: number;
   is_active: boolean;
+  min_quantity: number | null;
+  max_quantity: number | null;
   created_at: string;
   updated_at: string;
   category?: Category;
