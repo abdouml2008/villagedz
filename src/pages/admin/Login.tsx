@@ -62,9 +62,19 @@ export default function AdminLogin() {
         <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-village-lg border border-border text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">غير مصرح</h1>
           <p className="text-muted-foreground mb-4">ليس لديك صلاحية الوصول للوحة التحكم</p>
-          <Button onClick={() => navigate('/')} variant="outline">
-            العودة للصفحة الرئيسية
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button onClick={async () => {
+              const { signOut } = await import('@/hooks/useAuth').then(m => ({ signOut: m.useAuth }));
+              const { supabase } = await import('@/integrations/supabase/client');
+              await supabase.auth.signOut();
+              window.location.reload();
+            }} variant="default" className="gradient-primary text-primary-foreground">
+              تسجيل الخروج وإعادة المحاولة
+            </Button>
+            <Button onClick={() => navigate('/')} variant="outline">
+              العودة للصفحة الرئيسية
+            </Button>
+          </div>
         </div>
       </div>
     );
