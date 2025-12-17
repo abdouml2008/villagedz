@@ -15,7 +15,7 @@ const authSchema = z.object({
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, user } = useAuth();
+  const { signIn, signOut, user } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,9 +64,7 @@ export default function AdminLogin() {
           <p className="text-muted-foreground mb-4">ليس لديك صلاحية الوصول للوحة التحكم</p>
           <div className="flex flex-col gap-3">
             <Button onClick={async () => {
-              const { signOut } = await import('@/hooks/useAuth').then(m => ({ signOut: m.useAuth }));
-              const { supabase } = await import('@/integrations/supabase/client');
-              await supabase.auth.signOut();
+              await signOut();
               window.location.reload();
             }} variant="default" className="gradient-primary text-primary-foreground">
               تسجيل الخروج وإعادة المحاولة
