@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase } from './useSupabase';
 
 export function useAdminRole() {
   const { user, loading: authLoading } = useAuth();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkAdminRole() {
-      if (!user) {
+      if (!user || !supabase) {
         setIsAdmin(false);
         setLoading(false);
         return;
@@ -35,10 +36,10 @@ export function useAdminRole() {
       }
     }
 
-    if (!authLoading) {
+    if (!authLoading && !supabaseLoading) {
       checkAdminRole();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, supabase, supabaseLoading]);
 
-  return { isAdmin, loading: loading || authLoading };
+  return { isAdmin, loading: loading || authLoading || supabaseLoading };
 }
