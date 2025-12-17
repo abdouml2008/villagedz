@@ -15,12 +15,11 @@ const authSchema = z.object({
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, user } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
     if (user && !adminLoading) {
@@ -41,35 +40,9 @@ export default function AdminLogin() {
 
     setLoading(true);
     
-    if (isSignUp) {
-      const { error } = await signUp(email, password);
-      if (error) {
-        console.error('Signup error:', error);
-        if (error.message.includes('already registered')) {
-          toast.error('هذا البريد مسجل مسبقاً');
-        } else if (error.message.includes('valid email')) {
-          toast.error('بريد إلكتروني غير صالح');
-        } else if (error.message.includes('password')) {
-          toast.error('كلمة المرور ضعيفة - استخدم 6 أحرف على الأقل');
-        } else {
-          toast.error(`خطأ: ${error.message}`);
-        }
-      } else {
-        toast.success('تم إنشاء الحساب بنجاح');
-        // Auto login after signup
-        const { error: signInError } = await signIn(email, password);
-        if (!signInError) {
-          // Wait a moment for the role to be assigned
-          setTimeout(() => {
-            navigate('/admin/dashboard');
-          }, 500);
-        }
-      }
-    } else {
-      const { error } = await signIn(email, password);
-      if (error) {
-        toast.error('خطأ في تسجيل الدخول - تحقق من البريد وكلمة المرور');
-      }
+    const { error } = await signIn(email, password);
+    if (error) {
+      toast.error('خطأ في تسجيل الدخول - تحقق من البريد وكلمة المرور');
     }
     
     setLoading(false);
@@ -130,23 +103,9 @@ export default function AdminLogin() {
             />
           </div>
           <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground">
-            {loading ? 'جاري المعالجة...' : (isSignUp ? 'إنشاء حساب' : 'دخول')}
+            {loading ? 'جاري المعالجة...' : 'دخول'}
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-primary hover:underline"
-          >
-            {isSignUp ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ أنشئ حساب جديد'}
-          </button>
-        </div>
-
-        <p className="mt-4 text-xs text-center text-muted-foreground">
-          {isSignUp ? 'أول حساب يُنشأ سيحصل على صلاحية المدير تلقائياً' : ''}
-        </p>
       </div>
     </div>
   );
