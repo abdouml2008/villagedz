@@ -3,29 +3,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminRole } from '@/hooks/useAdminRole';
+import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Button } from '@/components/ui/button';
 import { Package, ShoppingCart, LogOut, LayoutDashboard, Users } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, signOut, loading } = useAuth();
   const { supabase, loading: supabaseLoading } = useSupabase();
-  const { isAdmin, loading: adminLoading } = useAdminRole();
+  const { hasRole, isAdmin, loading: roleLoading } = useHasAnyRole();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !adminLoading) {
-      if (!user) {
-        navigate('/admin');
-      } else if (!isAdmin) {
+    if (!loading && !roleLoading) {
+      if (!user || !hasRole) {
         navigate('/admin');
       }
     }
-  }, [user, loading, isAdmin, adminLoading, navigate]);
+  }, [user, loading, hasRole, roleLoading, navigate]);
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
-    enabled: !!user && !!supabase && isAdmin,
+    enabled: !!user && !!supabase && hasRole,
     queryFn: async () => {
       const client = await getSupabase();
       const [products, orders, pendingOrders] = await Promise.all([
@@ -41,8 +39,8 @@ export default function AdminDashboard() {
     }
   });
 
-  if (loading || supabaseLoading || adminLoading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
-  if (!user || !isAdmin) return null;
+  if (loading || supabaseLoading || roleLoading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
+  if (!user || !hasRole) return null;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -106,11 +104,13 @@ export default function AdminDashboard() {
             <h2 className="text-2xl font-bold mb-2">إدارة الطلبات</h2>
             <p className="text-muted-foreground">عرض ومعالجة طلبات الزبائن</p>
           </Link>
-          <Link to="/admin/users" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
-            <Users className="w-12 h-12 text-destructive mb-4" />
-            <h2 className="text-2xl font-bold mb-2">إدارة المستخدمين</h2>
-            <p className="text-muted-foreground">إنشاء وإدارة حسابات المستخدمين</p>
-          </Link>
+          {isAdmin && (
+            <Link to="/admin/users" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+              <Users className="w-12 h-12 text-destructive mb-4" />
+              <h2 className="text-2xl font-bold mb-2">إدارة المستخدمين</h2>
+              <p className="text-muted-foreground">إنشاء وإدارة حسابات المستخدمين</p>
+            </Link>
+          )}
         </div>
       </div>
     </div>

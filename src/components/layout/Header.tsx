@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Settings } from 'lucide-react';
+import { Menu, Settings, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -26,6 +27,7 @@ export function Header() {
   const location = useLocation();
   const { isScrolled } = useScrollPosition();
   const { isAdmin } = useAdminRole();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Header is transparent only on homepage hero when not scrolled
@@ -96,26 +98,24 @@ export function Header() {
             >
               <ThemeToggle />
             </motion.div>
-            {isAdmin && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <Link
+                to={isAdmin ? "/admin/dashboard" : "/admin"}
+                className={cn(
+                  'p-2 rounded-lg transition-colors duration-300',
+                  isTransparent
+                    ? 'text-white hover:bg-white/10'
+                    : 'text-foreground hover:bg-accent'
+                )}
+                title={isAdmin ? "لوحة التحكم" : "تسجيل الدخول"}
               >
-                <Link
-                  to="/admin/dashboard"
-                  className={cn(
-                    'p-2 rounded-lg transition-colors duration-300',
-                    isTransparent
-                      ? 'text-white hover:bg-white/10'
-                      : 'text-foreground hover:bg-accent'
-                  )}
-                  title="لوحة التحكم"
-                >
-                  <Settings className="size-5" />
-                </Link>
-              </motion.div>
-            )}
+                {isAdmin ? <Settings className="size-5" /> : <LogIn className="size-5" />}
+              </Link>
+            </motion.div>
           </nav>
 
           {/* Mobile Menu */}
@@ -147,16 +147,14 @@ export function Header() {
                       {link.name}
                     </Link>
                   ))}
-                  {isAdmin && (
-                    <Link
-                      to="/admin/dashboard"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-lg leading-7 font-light tracking-wide text-primary hover:text-primary/80 flex items-center gap-2"
-                    >
-                      <Settings className="size-5" />
-                      لوحة التحكم
-                    </Link>
-                  )}
+                  <Link
+                    to={isAdmin ? "/admin/dashboard" : "/admin"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-lg leading-7 font-light tracking-wide text-primary hover:text-primary/80 flex items-center gap-2"
+                  >
+                    {isAdmin ? <Settings className="size-5" /> : <LogIn className="size-5" />}
+                    {isAdmin ? "لوحة التحكم" : "تسجيل الدخول"}
+                  </Link>
                 </nav>
               </SheetContent>
             </Sheet>
