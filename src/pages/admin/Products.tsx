@@ -82,12 +82,17 @@ export default function AdminProducts() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const client = await getSupabase();
+      if (!client) throw new Error('لم يتم تهيئة الاتصال بالخادم');
       const { error } = await client.from('products').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast.success('تم حذف المنتج');
+    },
+    onError: (error: Error) => {
+      console.error('Delete error:', error);
+      toast.error(`فشل الحذف: ${error.message}`);
     }
   });
 
