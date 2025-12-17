@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { useSupabase } from '@/hooks/useSupabase';
+import { getSupabase } from '@/hooks/useSupabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowRight, Plus, Trash2, Key } from 'lucide-react';
+import { ArrowRight, Plus, Trash2, Key, Edit, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 const userSchema = z.object({
@@ -19,11 +19,18 @@ const userSchema = z.object({
   role: z.enum(['admin', 'user']),
 });
 
+interface UserData {
+  id: string;
+  email: string;
+  role: 'admin' | 'user';
+  created_at: string;
+  role_id?: string;
+}
+
 export default function AdminUsers() {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminRole();
-  const { supabase } = useSupabase();
   const queryClient = useQueryClient();
   
   const [newEmail, setNewEmail] = useState('');
@@ -33,6 +40,13 @@ export default function AdminUsers() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [newPasswordChange, setNewPasswordChange] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Edit user state
+  const [editUser, setEditUser] = useState<UserData | null>(null);
+  const [editEmail, setEditEmail] = useState('');
+  const [editRole, setEditRole] = useState<'admin' | 'user'>('user');
+  const [editPassword, setEditPassword] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Redirect if not admin
   if (!adminLoading && (!user || !isAdmin)) {
@@ -40,27 +54,25 @@ export default function AdminUsers() {
     return null;
   }
 
-  // Fetch users with roles
-  const { data: users, isLoading } = useQuery({
+  // Fetch users using edge function
+  const { data: usersData, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      if (!supabase) return [];
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const client = await getSupabase();
+      const response = await client.functions.invoke('list-users');
       
-      if (error) throw error;
-      return data || [];
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data as { users: UserData[]; isAdmin: boolean };
     },
-    enabled: !!supabase && isAdmin,
+    enabled: !!session,
   });
 
   const createUserMutation = useMutation({
     mutationFn: async ({ email, password, role }: { email: string; password: string; role: 'admin' | 'user' }) => {
-      if (!supabase || !session) throw new Error('غير مصرح');
-      
-      const response = await supabase.functions.invoke('create-user', {
+      const client = await getSupabase();
+      const response = await client.functions.invoke('create-user', {
         body: { email, password, role },
       });
       
@@ -78,7 +90,6 @@ export default function AdminUsers() {
       toast.success('تم إنشاء الحساب بنجاح');
     },
     onError: (error: any) => {
-      console.error('Create user error:', error);
       if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
         toast.error('هذا البريد مسجل مسبقاً');
       } else {
@@ -87,16 +98,38 @@ export default function AdminUsers() {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, email, role, password }: { userId: string; email?: string; role?: 'admin' | 'user'; password?: string }) => {
+      const client = await getSupabase();
+      const response = await client.functions.invoke('update-user', {
+        body: { userId, email, role, password: password || undefined },
+      });
+      
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setIsEditDialogOpen(false);
+      setEditUser(null);
+      toast.success('تم تحديث المستخدم بنجاح');
+    },
+    onError: (error: any) => {
+      toast.error(`خطأ: ${error.message}`);
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      if (!supabase) throw new Error('Supabase not initialized');
+      const client = await getSupabase();
       
-      // Can't delete yourself
       if (userId === user?.id) {
         throw new Error('لا يمكنك حذف حسابك الخاص');
       }
       
-      const { error } = await supabase
+      const { error } = await client
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
@@ -114,9 +147,8 @@ export default function AdminUsers() {
 
   const changePasswordMutation = useMutation({
     mutationFn: async ({ newPassword }: { newPassword: string }) => {
-      if (!supabase) throw new Error('Supabase not initialized');
-      
-      const { error } = await supabase.auth.updateUser({
+      const client = await getSupabase();
+      const { error } = await client.auth.updateUser({
         password: newPassword,
       });
       
@@ -154,6 +186,35 @@ export default function AdminUsers() {
     changePasswordMutation.mutate({ newPassword: newPasswordChange });
   };
 
+  const openEditDialog = (userData: UserData) => {
+    setEditUser(userData);
+    setEditEmail(userData.email);
+    setEditRole(userData.role);
+    setEditPassword('');
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (!editUser) return;
+    
+    if (editEmail && !z.string().email().safeParse(editEmail).success) {
+      toast.error('بريد إلكتروني غير صالح');
+      return;
+    }
+    
+    if (editPassword && editPassword.length < 6) {
+      toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+    
+    updateUserMutation.mutate({
+      userId: editUser.id,
+      email: editEmail !== editUser.email ? editEmail : undefined,
+      role: editRole !== editUser.role ? editRole : undefined,
+      password: editPassword || undefined,
+    });
+  };
+
   if (adminLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -161,6 +222,9 @@ export default function AdminUsers() {
       </div>
     );
   }
+
+  const users = usersData?.users || [];
+  const currentUserIsAdmin = usersData?.isAdmin || false;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -184,7 +248,7 @@ export default function AdminUsers() {
               </DialogTrigger>
               <DialogContent dir="rtl">
                 <DialogHeader>
-                  <DialogTitle>تغيير كلمة المرور</DialogTitle>
+                  <DialogTitle>تغيير كلمة المرور الخاصة بك</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
@@ -216,62 +280,114 @@ export default function AdminUsers() {
               </DialogContent>
             </Dialog>
 
-            {/* Create User Dialog */}
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gradient-primary">
-                  <Plus className="size-4 ml-2" />
-                  إضافة مستخدم
-                </Button>
-              </DialogTrigger>
-              <DialogContent dir="rtl">
-                <DialogHeader>
-                  <DialogTitle>إنشاء حساب جديد</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <Label>البريد الإلكتروني</Label>
-                    <Input 
-                      type="email" 
-                      value={newEmail}
-                      onChange={e => setNewEmail(e.target.value)}
-                      placeholder="user@example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label>كلمة المرور</Label>
-                    <Input 
-                      type="password" 
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <Label>الدور</Label>
-                    <Select value={newRole} onValueChange={(v: 'admin' | 'user') => setNewRole(v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">مستخدم</SelectItem>
-                        <SelectItem value="admin">مدير</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button 
-                    onClick={handleCreateUser} 
-                    disabled={createUserMutation.isPending}
-                    className="w-full gradient-primary"
-                  >
-                    {createUserMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
+            {/* Create User Dialog - Admin only */}
+            {currentUserIsAdmin && (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gradient-primary">
+                    <Plus className="size-4 ml-2" />
+                    إضافة مستخدم
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent dir="rtl">
+                  <DialogHeader>
+                    <DialogTitle>إنشاء حساب جديد</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <Label>البريد الإلكتروني</Label>
+                      <Input 
+                        type="email" 
+                        value={newEmail}
+                        onChange={e => setNewEmail(e.target.value)}
+                        placeholder="user@example.com"
+                      />
+                    </div>
+                    <div>
+                      <Label>كلمة المرور</Label>
+                      <Input 
+                        type="password" 
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <Label>الدور</Label>
+                      <Select value={newRole} onValueChange={(v: 'admin' | 'user') => setNewRole(v)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">مستخدم</SelectItem>
+                          <SelectItem value="admin">مدير</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button 
+                      onClick={handleCreateUser} 
+                      disabled={createUserMutation.isPending}
+                      className="w-full gradient-primary"
+                    >
+                      {createUserMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </header>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل بيانات المستخدم</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>البريد الإلكتروني</Label>
+              <Input 
+                type="email" 
+                value={editEmail}
+                onChange={e => setEditEmail(e.target.value)}
+                placeholder="user@example.com"
+              />
+            </div>
+            {currentUserIsAdmin && (
+              <div>
+                <Label>الدور</Label>
+                <Select value={editRole} onValueChange={(v: 'admin' | 'user') => setEditRole(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">مستخدم</SelectItem>
+                    <SelectItem value="admin">مدير</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label>كلمة المرور الجديدة (اتركه فارغاً للإبقاء على القديمة)</Label>
+              <Input 
+                type="password" 
+                value={editPassword}
+                onChange={e => setEditPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <Button 
+              onClick={handleUpdateUser} 
+              disabled={updateUserMutation.isPending}
+              className="w-full gradient-primary"
+            >
+              {updateUserMutation.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -279,47 +395,67 @@ export default function AdminUsers() {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-right px-4 py-3 font-medium">معرف المستخدم</th>
+                <th className="text-right px-4 py-3 font-medium">
+                  <div className="flex items-center gap-2">
+                    <Mail className="size-4" />
+                    البريد الإلكتروني
+                  </div>
+                </th>
                 <th className="text-right px-4 py-3 font-medium">الدور</th>
                 <th className="text-right px-4 py-3 font-medium">تاريخ الإنشاء</th>
                 <th className="text-center px-4 py-3 font-medium">إجراءات</th>
               </tr>
             </thead>
             <tbody>
-              {users?.map((userRole) => (
-                <tr key={userRole.id} className="border-t border-border">
-                  <td className="px-4 py-3 text-sm font-mono">
-                    {userRole.user_id.slice(0, 8)}...
-                    {userRole.user_id === user?.id && (
+              {users.map((userData) => (
+                <tr key={userData.id} className="border-t border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-medium">{userData.email}</span>
+                    {userData.id === user?.id && (
                       <span className="mr-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">أنت</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-xs ${
-                      userRole.role === 'admin' 
+                      userData.role === 'admin' 
                         ? 'bg-destructive/10 text-destructive' 
                         : 'bg-primary/10 text-primary'
                     }`}>
-                      {userRole.role === 'admin' ? 'مدير' : 'مستخدم'}
+                      {userData.role === 'admin' ? 'مدير' : 'مستخدم'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {new Date(userRole.created_at).toLocaleDateString('ar-DZ')}
+                    {new Date(userData.created_at).toLocaleDateString('ar-DZ')}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      disabled={userRole.user_id === user?.id}
-                      onClick={() => deleteUserMutation.mutate(userRole.user_id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      {/* Edit button - visible for own account or admin for others */}
+                      {(userData.id === user?.id || currentUserIsAdmin) && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => openEditDialog(userData)}
+                          className="text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                      )}
+                      {/* Delete button - admin only and not self */}
+                      {currentUserIsAdmin && userData.id !== user?.id && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => deleteUserMutation.mutate(userData.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
-              {(!users || users.length === 0) && (
+              {users.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                     لا يوجد مستخدمين
