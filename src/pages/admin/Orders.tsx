@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowRight } from 'lucide-react';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
 
 const statusLabels: Record<string, string> = {
@@ -67,12 +67,7 @@ export default function AdminOrders() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to="/admin/dashboard" className="text-muted-foreground hover:text-foreground"><ArrowRight className="w-5 h-5" /></Link>
-          <h1 className="text-xl font-bold">إدارة الطلبات</h1>
-        </div>
-      </header>
+      <AdminHeader title="إدارة الطلبات" />
 
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6">الطلبات ({orders?.length || 0})</h2>
