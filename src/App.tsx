@@ -20,6 +20,7 @@ const AdminOrders = lazy(() => import("./pages/admin/Orders"));
 const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const AdminDeliveryPrices = lazy(() => import("./pages/admin/DeliveryPrices"));
 const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminCoupons = lazy(() => import("./pages/admin/Coupons"));
 const OrdersByStatus = lazy(() => import("./pages/admin/OrdersByStatus"));
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => {
                   <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/delivery-prices" element={<AdminDeliveryPrices />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/coupons" element={<AdminCoupons />} />
                 </Routes>
               </Suspense>
             </BrowserRouter>

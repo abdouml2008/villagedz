@@ -79,3 +79,16 @@ export interface DeliverySettings {
   default_office_price: number;
   updated_at: string;
 }
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  min_order_amount: number | null;
+  max_uses: number | null;
+  used_count: number;
+  is_active: boolean;
+  expires_at: string | null;
+  created_at: string;
+}

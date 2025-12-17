@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart, getItemPrice } from '@/hooks/useCart';
-import { CartItem } from '@/types/store';
+import { CartItem, Coupon } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,12 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Wilaya } from '@/types/store';
+import { Tag, X, Check, Loader2 } from 'lucide-react';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { items: cartItems, totalPrice: cartTotalPrice, totalDiscount: cartTotalDiscount, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -48,6 +52,15 @@ export default function Checkout() {
     return { totalPrice: cartTotalPrice, totalDiscount: cartTotalDiscount };
   }, [directItem, cartTotalPrice, cartTotalDiscount]);
 
+  // Calculate coupon discount
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.discount_type === 'percentage') {
+      return totalPrice * (appliedCoupon.discount_value / 100);
+    }
+    return Math.min(appliedCoupon.discount_value, totalPrice);
+  }, [appliedCoupon, totalPrice]);
+
   const { data: wilayas, isLoading: wilayasLoading } = useQuery({
     queryKey: ['wilayas'],
     queryFn: async () => {
@@ -62,7 +75,64 @@ export default function Checkout() {
   const deliveryPrice = selectedWilaya 
     ? (form.deliveryType === 'home' ? selectedWilaya.home_delivery_price : selectedWilaya.office_delivery_price)
     : 0;
-  const finalTotal = totalPrice + deliveryPrice;
+  const finalTotal = totalPrice - couponDiscount + deliveryPrice;
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('يرجى إدخال كود الكوبون');
+      return;
+    }
+    
+    setCouponLoading(true);
+    try {
+      const client = await getSupabase();
+      const { data: coupon, error } = await client
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (!coupon) {
+        toast.error('كود الكوبون غير صالح');
+        return;
+      }
+      
+      // Check expiration
+      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+        toast.error('انتهت صلاحية الكوبون');
+        return;
+      }
+      
+      // Check max uses
+      if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
+        toast.error('تم استنفاد عدد استخدامات الكوبون');
+        return;
+      }
+      
+      // Check min order amount
+      if (coupon.min_order_amount && totalPrice < coupon.min_order_amount) {
+        toast.error(`الحد الأدنى للطلب هو ${coupon.min_order_amount} دج`);
+        return;
+      }
+      
+      setAppliedCoupon(coupon as Coupon);
+      toast.success('تم تطبيق الكوبون بنجاح!');
+    } catch (error) {
+      console.error(error);
+      toast.error('حدث خطأ أثناء التحقق من الكوبون');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.success('تم إزالة الكوبون');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,12 +157,22 @@ export default function Checkout() {
           wilaya_id: parseInt(form.wilayaId),
           delivery_type: form.deliveryType,
           delivery_price: deliveryPrice,
-          total_price: finalTotal
+          total_price: finalTotal,
+          coupon_code: appliedCoupon?.code || null,
+          coupon_discount: couponDiscount
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
+
+      // Increment coupon used_count
+      if (appliedCoupon) {
+        await client
+          .from('coupons')
+          .update({ used_count: appliedCoupon.used_count + 1 })
+          .eq('id', appliedCoupon.id);
+      }
 
       const orderItems = items.map(item => ({
         order_id: order.id,
@@ -200,14 +280,57 @@ export default function Checkout() {
                 );
               })}
             </div>
+
+            {/* Coupon Input */}
+            <div className="border-t border-border pt-4 mb-4">
+              <Label className="flex items-center gap-2 mb-2">
+                <Tag className="w-4 h-4" />
+                كود الخصم
+              </Label>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-green-500/10 text-green-600 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    <span className="font-semibold">{appliedCoupon.code}</span>
+                    <span className="text-sm">
+                      ({appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${appliedCoupon.discount_value} دج`})
+                    </span>
+                  </div>
+                  <button type="button" onClick={removeCoupon} className="hover:bg-green-500/20 p-1 rounded">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input 
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="أدخل الكود هنا"
+                    className="uppercase"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={applyCoupon}
+                    disabled={couponLoading}
+                  >
+                    {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'تطبيق'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="border-t border-border pt-4 space-y-2">
               <div className="flex justify-between"><span>المنتجات</span><span>{(totalPrice + totalDiscount).toFixed(0)} دج</span></div>
               {totalDiscount > 0 && (
-                <div className="flex justify-between text-green-600"><span>الخصم</span><span>-{totalDiscount.toFixed(0)} دج</span></div>
+                <div className="flex justify-between text-green-600"><span>خصم الكمية</span><span>-{totalDiscount.toFixed(0)} دج</span></div>
+              )}
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-green-600"><span>خصم الكوبون</span><span>-{couponDiscount.toFixed(0)} دج</span></div>
               )}
               <div className="flex justify-between"><span>التوصيل</span><span>{deliveryPrice} دج</span></div>
               <div className="flex justify-between text-xl font-bold pt-2 border-t border-border">
-                <span>الإجمالي</span><span className="text-primary">{finalTotal} دج</span>
+                <span>الإجمالي</span><span className="text-primary">{finalTotal.toFixed(0)} دج</span>
               </div>
             </div>
             <Button type="submit" disabled={loading} className="w-full mt-6 gradient-primary text-primary-foreground text-lg py-6">
