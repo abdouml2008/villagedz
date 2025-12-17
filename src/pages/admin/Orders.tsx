@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
@@ -7,9 +7,10 @@ import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +46,7 @@ export default function AdminOrders() {
   const { hasRole, loading: roleLoading } = useHasAnyRole();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -70,6 +72,18 @@ export default function AdminOrders() {
       return data as (Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] })[];
     }
   });
+
+  // Filter orders based on search query
+  const filteredOrders = useMemo(() => {
+    if (!orders || !searchQuery.trim()) return orders;
+    const query = searchQuery.trim().toLowerCase();
+    return orders.filter(order => 
+      order.customer_first_name.toLowerCase().includes(query) ||
+      order.customer_last_name.toLowerCase().includes(query) ||
+      order.customer_phone.includes(query) ||
+      `${order.customer_first_name} ${order.customer_last_name}`.toLowerCase().includes(query)
+    );
+  }, [orders, searchQuery]);
 
   const { data: counts } = useQuery({
     queryKey: ['orders-counts'],
@@ -158,29 +172,42 @@ export default function AdminOrders() {
           </Link>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-2xl font-bold">الطلبات ({orders?.length || 0})</h2>
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">الكل</SelectItem>
-              <SelectItem value="pending">معلق</SelectItem>
-              <SelectItem value="confirmed">مؤكد</SelectItem>
-              <SelectItem value="shipped">مشحون</SelectItem>
-              <SelectItem value="delivered">مسلم</SelectItem>
-              <SelectItem value="cancelled">ملغى</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Search and Filter */}
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+          <div className="relative flex-1 w-full md:max-w-md">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث بالاسم أو رقم الهاتف..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold">الطلبات ({filteredOrders?.length || 0})</h2>
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="pending">معلق</SelectItem>
+                <SelectItem value="confirmed">مؤكد</SelectItem>
+                <SelectItem value="shipped">مشحون</SelectItem>
+                <SelectItem value="delivered">مسلم</SelectItem>
+                <SelectItem value="cancelled">ملغى</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading ? (
           <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="bg-card h-32 rounded-xl animate-pulse" />)}</div>
-        ) : orders?.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">لا توجد طلبات</div>
+        ) : filteredOrders?.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            {searchQuery ? 'لا توجد نتائج للبحث' : 'لا توجد طلبات'}
+          </div>
         ) : (
           <div className="space-y-4">
-            {orders?.map(order => (
+            {filteredOrders?.map(order => (
               <div key={order.id} className="bg-card rounded-xl p-6 shadow-village-sm border border-border">
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div>
