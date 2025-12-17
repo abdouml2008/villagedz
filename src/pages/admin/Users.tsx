@@ -49,9 +49,15 @@ export default function AdminUsers() {
   const [editPassword, setEditPassword] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Redirect if not admin
-  if (!adminLoading && (!user || !isAdmin)) {
+  // Redirect if not admin - show permission denied message
+  if (!adminLoading && !user) {
     navigate('/admin');
+    return null;
+  }
+
+  if (!adminLoading && user && !isAdmin) {
+    toast.error('ليس لديك صلاحية الوصول لهذه الصفحة');
+    navigate('/admin/dashboard');
     return null;
   }
 
