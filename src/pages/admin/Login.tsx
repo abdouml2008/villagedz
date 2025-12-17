@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminRole } from '@/hooks/useAdminRole';
+import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,18 +16,18 @@ const authSchema = z.object({
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { signIn, signOut, user } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdminRole();
+  const { hasRole, loading: roleLoading } = useHasAnyRole();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user && !adminLoading) {
-      if (isAdmin) {
+    if (user && !roleLoading) {
+      if (hasRole) {
         navigate('/admin/dashboard');
       }
     }
-  }, [user, isAdmin, adminLoading, navigate]);
+  }, [user, hasRole, roleLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ export default function AdminLogin() {
     setLoading(false);
   };
 
-  if (adminLoading && user) {
+  if (roleLoading && user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
@@ -56,7 +56,7 @@ export default function AdminLogin() {
     );
   }
 
-  if (user && !isAdmin && !adminLoading) {
+  if (user && !hasRole && !roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4" dir="rtl">
         <div className="w-full max-w-md bg-card rounded-2xl p-8 shadow-village-lg border border-border text-center">
