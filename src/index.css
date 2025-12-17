@@ -1,109 +1,87 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
-All colors MUST be HSL.
-*/
+/* Village Store Design System */
+
+@font-face {
+  font-family: 'Cairo';
+  src: url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+}
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(240 10% 3.9%);
+  --background: hsl(30 20% 98%);
+  --foreground: hsl(20 10% 15%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
+  --card-foreground: hsl(20 10% 15%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(240 5.9% 10%);
-  --primary-foreground: hsl(0 0% 98%);
-  --secondary: hsl(240 4.8% 95.9%);
-  --secondary-foreground: hsl(240 5.9% 10%);
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(240 4.8% 95.9%);
-  --accent-foreground: hsl(240 5.9% 10%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
-  --ring: hsl(240 5.9% 10%);
-  --radius: 0.5rem;
-  --sidebar-background: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --popover-foreground: hsl(20 10% 15%);
+  --primary: hsl(25 85% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(35 60% 95%);
+  --secondary-foreground: hsl(20 10% 15%);
+  --muted: hsl(30 20% 96%);
+  --muted-foreground: hsl(20 10% 45%);
+  --accent: hsl(160 60% 45%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 75% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(30 15% 88%);
+  --input: hsl(30 15% 88%);
+  --ring: hsl(25 85% 55%);
+  --radius: 0.75rem;
 
-  /* Shugar Design System Variables */
-  --context-card-border: hsla(0, 0%, 92%, 1);
-  --ds-red-800: oklch(58.19% 0.2482 25.15);
-  --ds-red-900: oklch(54.99% 0.232 25.29);
-  --ds-amber-800: oklch(77.21% 0.1991 64.28);
-  --ds-amber-850: hsl(33, 96%, 42%);
-  --ds-gray-100: hsla(0, 0%, 95%, 1);
-  --ds-gray-400: hsla(0, 0%, 92%, 1);
-  --ds-gray-700: hsla(0, 0%, 56%, 1);
-  --ds-gray-1000: hsla(0, 0%, 9%, 1);
-  --ds-gray-1000-h: hsl(0, 0%, 22%);
-  --ds-gray-alpha-200: hsla(0, 0%, 0%, 0.08);
-  --ds-gray-alpha-400: hsla(0, 0%, 0%, 0.08);
-  --ds-background-100: hsla(0, 0%, 100%, 1);
-  --ds-focus-color: var(--ring);
-  --ds-focus-ring: 0 0 0 2px var(--ds-background-100), 0 0 0 4px var(--ds-focus-color);
-  --ds-shadow-border: 0 0 0 1px rgba(0, 0, 0, 0.08);
-  --ds-shadow-small: 0px 2px 2px rgba(0, 0, 0, 0.04);
-  --ds-shadow-border-small: var(--ds-shadow-border), var(--ds-shadow-small);
+  /* Village Custom Colors */
+  --village-orange: hsl(25 85% 55%);
+  --village-orange-dark: hsl(25 85% 45%);
+  --village-green: hsl(160 60% 45%);
+  --village-green-dark: hsl(160 60% 35%);
+  --village-brown: hsl(20 30% 30%);
+  --village-cream: hsl(35 60% 95%);
+  --village-sand: hsl(30 25% 90%);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, hsl(25 85% 55%), hsl(35 80% 50%));
+  --gradient-hero: linear-gradient(180deg, hsl(30 20% 98%) 0%, hsl(35 60% 95%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(30 20% 98%) 100%);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px hsl(20 30% 30% / 0.06);
+  --shadow-md: 0 4px 16px hsl(20 30% 30% / 0.1);
+  --shadow-lg: 0 8px 32px hsl(20 30% 30% / 0.12);
+  --shadow-glow: 0 0 24px hsl(25 85% 55% / 0.25);
 }
 
 .dark {
-  --background: hsl(240 10% 3.9%);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(240 10% 3.9%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(240 10% 3.9%);
-  --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(0 0% 98%);
-  --primary-foreground: hsl(240 5.9% 10%);
-  --secondary: hsl(240 3.7% 15.9%);
-  --secondary-foreground: hsl(0 0% 98%);
-  --muted: hsl(240 3.7% 15.9%);
-  --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
-  --accent-foreground: hsl(0 0% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(240 3.7% 15.9%);
-  --input: hsl(240 3.7% 15.9%);
-  --ring: hsl(240 4.9% 83.9%);
-  --sidebar-background: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --background: hsl(20 15% 8%);
+  --foreground: hsl(30 20% 95%);
+  --card: hsl(20 15% 12%);
+  --card-foreground: hsl(30 20% 95%);
+  --popover: hsl(20 15% 12%);
+  --popover-foreground: hsl(30 20% 95%);
+  --primary: hsl(25 85% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(20 15% 18%);
+  --secondary-foreground: hsl(30 20% 95%);
+  --muted: hsl(20 15% 15%);
+  --muted-foreground: hsl(30 15% 60%);
+  --accent: hsl(160 60% 45%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 65% 45%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(20 15% 20%);
+  --input: hsl(20 15% 20%);
+  --ring: hsl(25 85% 55%);
 
-  /* Shugar Design System Variables - Dark Mode */
-  --context-card-border: hsla(0, 0%, 18%, 1);
-  --ds-red-800: oklch(58.01% 0.227 25.12);
-  --ds-red-900: oklch(69.96% 0.2136 22.03);
-  --ds-amber-800: oklch(77.21% 0.1991 64.28);
-  --ds-gray-100: hsla(0, 0%, 10%, 1);
-  --ds-gray-400: hsla(0, 0%, 18%, 1);
-  --ds-gray-700: hsla(0, 0%, 56%, 1);
-  --ds-gray-1000: hsla(0, 0%, 93%, 1);
-  --ds-gray-1000-h: hsl(0, 0%, 80%);
-  --ds-gray-alpha-200: hsla(0, 0%, 100%, 0.09);
-  --ds-gray-alpha-400: hsla(0, 0%, 100%, 0.14);
-  --ds-background-100: hsla(0,0%,4%, 1);
-  --ds-shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.145);
-  --ds-shadow-small: 0px 1px 2px rgba(0, 0, 0, 0.16);
-  --ds-shadow-border-small: var(--ds-shadow-border), var(--ds-shadow-small);
+  /* Village Custom Colors - Dark */
+  --village-cream: hsl(20 15% 15%);
+  --village-sand: hsl(20 15% 12%);
+  --gradient-hero: linear-gradient(180deg, hsl(20 15% 8%) 0%, hsl(20 15% 12%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(20 15% 14%) 0%, hsl(20 15% 10%) 100%);
 }
 
 @theme {
+  --font-family-cairo: 'Cairo', sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,56 +101,51 @@ All colors MUST be HSL.
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar-background);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Shugar Design System Colors */
-  --color-context-card-border: var(--context-card-border);
-  --color-red-800: var(--ds-red-800);
-  --color-red-900: var(--ds-red-900);
-  --color-amber-800: var(--ds-amber-800);
-  --color-amber-850: var(--ds-amber-850);
-  --color-gray-100: var(--ds-gray-100);
-  --color-gray-400: var(--ds-gray-400);
-  --color-gray-700: var(--ds-gray-700);
-  --color-gray-1000: var(--ds-gray-1000);
-  --color-gray-1000-h: var(--ds-gray-1000-h);
-  --color-gray-alpha-200: var(--ds-gray-alpha-200);
-  --color-gray-alpha-400: var(--ds-gray-alpha-400);
-  --color-background-100: var(--ds-background-100);
-  --shadow-focus-ring: var(--ds-focus-ring);
-  --shadow-border-small: var(--ds-shadow-border-small);
+  /* Village Colors */
+  --color-village-orange: var(--village-orange);
+  --color-village-orange-dark: var(--village-orange-dark);
+  --color-village-green: var(--village-green);
+  --color-village-green-dark: var(--village-green-dark);
+  --color-village-brown: var(--village-brown);
+  --color-village-cream: var(--village-cream);
+  --color-village-sand: var(--village-sand);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-scale-in: scale-in 0.3s ease-out;
 }
 
 @keyframes accordion-down {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--radix-accordion-content-height);
-  }
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
 }
 
 @keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
-  }
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @layer base {
@@ -180,12 +153,52 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    font-family: 'Cairo', sans-serif;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 @layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .shadow-village-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-village-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-village-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .hide-scrollbar {
     scrollbar-width: none;
     -ms-overflow-style: none;
