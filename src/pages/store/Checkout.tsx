@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
+import { CartItem } from '@/types/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +15,8 @@ import { Wilaya } from '@/types/store';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const location = useLocation();
+  const { items: cartItems, totalPrice: cartTotalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
@@ -23,6 +25,24 @@ export default function Checkout() {
     wilayaId: '',
     deliveryType: 'office' as 'home' | 'office'
   });
+
+  // Check if there's a direct item from "Buy Now"
+  const directItem = location.state?.directItem as CartItem | undefined;
+  
+  // Use direct item if present, otherwise use cart
+  const items = useMemo(() => {
+    if (directItem) {
+      return [directItem];
+    }
+    return cartItems;
+  }, [directItem, cartItems]);
+
+  const totalPrice = useMemo(() => {
+    if (directItem) {
+      return directItem.product.price * directItem.quantity;
+    }
+    return cartTotalPrice;
+  }, [directItem, cartTotalPrice]);
 
   const { data: wilayas, isLoading: wilayasLoading } = useQuery({
     queryKey: ['wilayas'],
@@ -82,7 +102,10 @@ export default function Checkout() {
       const { error: itemsError } = await client.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
-      clearCart();
+      // Only clear cart if not a direct purchase
+      if (!directItem) {
+        clearCart();
+      }
       toast.success('تم إرسال طلبك بنجاح!');
       navigate('/');
     } catch (error) {

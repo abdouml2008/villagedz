@@ -1,15 +1,16 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Zap } from 'lucide-react';
 import { Product } from '@/types/store';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>();
@@ -126,14 +127,36 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <Button
-              size="lg"
-              className="w-full gradient-primary text-primary-foreground text-lg py-6 hover:opacity-90"
-              onClick={() => addItem(product, quantity, selectedSize, selectedColor)}
-            >
-              <ShoppingCart className="w-5 h-5 ml-2" />
-              أضف إلى السلة
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                size="lg"
+                variant="outline"
+                className="flex-1 text-lg py-6"
+                onClick={() => addItem(product, quantity, selectedSize, selectedColor)}
+              >
+                <ShoppingCart className="w-5 h-5 ml-2" />
+                أضف للسلة
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1 gradient-primary text-primary-foreground text-lg py-6 hover:opacity-90"
+                onClick={() => {
+                  navigate('/checkout', {
+                    state: {
+                      directItem: {
+                        product,
+                        quantity,
+                        size: selectedSize,
+                        color: selectedColor
+                      }
+                    }
+                  });
+                }}
+              >
+                <Zap className="w-5 h-5 ml-2" />
+                اطلب الآن
+              </Button>
+            </div>
           </div>
         </div>
       </div>
