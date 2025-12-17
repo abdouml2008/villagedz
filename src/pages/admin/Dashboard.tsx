@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3 } from 'lucide-react';
+import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -116,6 +116,11 @@ export default function AdminDashboard() {
             <BarChart3 className="w-12 h-12 text-accent mb-4" />
             <h2 className="text-2xl font-bold mb-2">التحليلات</h2>
             <p className="text-muted-foreground">إحصائيات المبيعات والطلبات</p>
+          </Link>
+          <Link to="/admin/coupons" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+            <Tag className="w-12 h-12 text-green-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">كوبونات الخصم</h2>
+            <p className="text-muted-foreground">إنشاء وإدارة أكواد الخصم</p>
           </Link>
         </div>
       </div>
