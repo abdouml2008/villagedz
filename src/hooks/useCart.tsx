@@ -25,6 +25,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addItem = (product: Product, quantity = 1, size?: string, color?: string) => {
+    const minQty = product.min_quantity || 1;
+    const maxQty = product.max_quantity;
+    
     setItems(prev => {
       const existingIndex = prev.findIndex(
         item => item.product.id === product.id && item.size === size && item.color === color
@@ -32,13 +35,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        toast.success('تم تحديث الكمية');
+        let newQuantity = updated[existingIndex].quantity + quantity;
+        
+        if (maxQty && newQuantity > maxQty) {
+          newQuantity = maxQty;
+          toast.error(`الحد الأقصى للكمية هو ${maxQty}`);
+        } else {
+          toast.success('تم تحديث الكمية');
+        }
+        
+        updated[existingIndex].quantity = newQuantity;
         return updated;
       }
 
+      const finalQuantity = Math.max(minQty, quantity);
       toast.success('تمت الإضافة إلى السلة');
-      return [...prev, { product, quantity, size, color }];
+      return [...prev, { product, quantity: finalQuantity, size, color }];
     });
   };
 
@@ -50,10 +62,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = (productId: string, quantity: number, size?: string, color?: string) => {
-    if (quantity <= 0) {
+    const item = items.find(i => i.product.id === productId && i.size === size && i.color === color);
+    if (!item) return;
+    
+    const minQty = item.product.min_quantity || 1;
+    const maxQty = item.product.max_quantity;
+    
+    if (quantity < minQty) {
       removeItem(productId, size, color);
       return;
     }
+    
+    if (maxQty && quantity > maxQty) {
+      toast.error(`الحد الأقصى للكمية هو ${maxQty}`);
+      return;
+    }
+    
     setItems(prev => prev.map(item => 
       item.product.id === productId && item.size === size && item.color === color
         ? { ...item, quantity }

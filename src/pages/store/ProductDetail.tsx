@@ -4,7 +4,7 @@ import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Zap } from 'lucide-react';
 import { Product } from '@/types/store';
 
@@ -12,7 +12,7 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [selectedSize, setSelectedSize] = useState<string>();
   const [selectedColor, setSelectedColor] = useState<string>();
 
@@ -29,6 +29,13 @@ export default function ProductDetail() {
       return data as Product | null;
     }
   });
+
+  // Set initial quantity to min_quantity when product loads
+  useEffect(() => {
+    if (product?.min_quantity && product.min_quantity > 1) {
+      setQuantity(product.min_quantity);
+    }
+  }, [product?.min_quantity]);
 
   if (isLoading) {
     return (
@@ -117,14 +124,29 @@ export default function ProductDetail() {
             <div>
               <h3 className="font-semibold mb-2">الكمية</h3>
               <div className="flex items-center gap-4">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 rounded-lg border border-border hover:bg-secondary">
+                <button 
+                  onClick={() => setQuantity(Math.max(product.min_quantity || 1, quantity - 1))} 
+                  className="p-2 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
+                  disabled={quantity <= (product.min_quantity || 1)}
+                >
                   <Minus className="w-5 h-5" />
                 </button>
                 <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} className="p-2 rounded-lg border border-border hover:bg-secondary">
+                <button 
+                  onClick={() => setQuantity(product.max_quantity ? Math.min(product.max_quantity, quantity + 1) : quantity + 1)} 
+                  className="p-2 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
+                  disabled={product.max_quantity ? quantity >= product.max_quantity : false}
+                >
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
+              {(product.min_quantity || product.max_quantity) && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {product.min_quantity && product.min_quantity > 1 && `الحد الأدنى: ${product.min_quantity}`}
+                  {product.min_quantity && product.min_quantity > 1 && product.max_quantity && ' | '}
+                  {product.max_quantity && `الحد الأقصى: ${product.max_quantity}`}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3">
