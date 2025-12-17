@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -136,6 +137,33 @@ export default function AdminOrders() {
     }
   });
 
+  const exportToExcel = () => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      toast.error('لا توجد طلبات للتصدير');
+      return;
+    }
+
+    const data = filteredOrders.map(order => ({
+      'رقم الطلب': order.id.slice(0, 8),
+      'الاسم': `${order.customer_first_name} ${order.customer_last_name}`,
+      'رقم الهاتف': order.customer_phone,
+      'الولاية': order.wilaya?.name_ar || '',
+      'نوع التوصيل': order.delivery_type === 'home' ? 'منزل' : 'مكتب',
+      'المنتجات': order.items?.map(i => `${i.product?.name} x${i.quantity}`).join(', ') || '',
+      'سعر التوصيل': order.delivery_price,
+      'المجموع': order.total_price,
+      'الحالة': statusLabels[order.status] || order.status,
+      'التاريخ': new Date(order.created_at).toLocaleDateString('ar-DZ'),
+      'ملاحظات': order.notes || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
+    XLSX.writeFile(wb, `orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('تم تصدير الطلبات بنجاح');
+  };
+
   if (loading || supabaseLoading || roleLoading || !user || !hasRole) return null;
 
   return (
@@ -183,7 +211,7 @@ export default function AdminOrders() {
               className="pr-10"
             />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <h2 className="text-2xl font-bold">الطلبات ({filteredOrders?.length || 0})</h2>
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
@@ -196,6 +224,10 @@ export default function AdminOrders() {
                 <SelectItem value="cancelled">ملغى</SelectItem>
               </SelectContent>
             </Select>
+            <Button onClick={exportToExcel} variant="outline" className="gap-2">
+              <Download className="w-4 h-4" />
+              تصدير Excel
+            </Button>
           </div>
         </div>
 
