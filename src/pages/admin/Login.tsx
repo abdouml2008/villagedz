@@ -44,10 +44,15 @@ export default function AdminLogin() {
     if (isSignUp) {
       const { error } = await signUp(email, password);
       if (error) {
+        console.error('Signup error:', error);
         if (error.message.includes('already registered')) {
           toast.error('هذا البريد مسجل مسبقاً');
+        } else if (error.message.includes('valid email')) {
+          toast.error('بريد إلكتروني غير صالح');
+        } else if (error.message.includes('password')) {
+          toast.error('كلمة المرور ضعيفة - استخدم 6 أحرف على الأقل');
         } else {
-          toast.error('خطأ في إنشاء الحساب');
+          toast.error(`خطأ: ${error.message}`);
         }
       } else {
         toast.success('تم إنشاء الحساب بنجاح');
