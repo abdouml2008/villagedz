@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useSupabase, getSupabase } from '@/hooks/useSupabase';
+import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import { Wilaya } from '@/types/store';
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
-  const { supabase, loading: supabaseLoading } = useSupabase();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
@@ -25,9 +24,8 @@ export default function Checkout() {
     deliveryType: 'office' as 'home' | 'office'
   });
 
-  const { data: wilayas } = useQuery({
+  const { data: wilayas, isLoading: wilayasLoading } = useQuery({
     queryKey: ['wilayas'],
-    enabled: !!supabase,
     queryFn: async () => {
       const client = await getSupabase();
       const { data, error } = await client.from('wilayas').select('*').order('code');
@@ -95,14 +93,6 @@ export default function Checkout() {
     }
   };
 
-  if (supabaseLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
-
   return (
     <StoreLayout>
       <div className="container mx-auto px-4 py-8">
@@ -131,7 +121,7 @@ export default function Checkout() {
             <div>
               <Label>الولاية</Label>
               <Select value={form.wilayaId} onValueChange={v => setForm({...form, wilayaId: v})}>
-                <SelectTrigger><SelectValue placeholder="اختر الولاية" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={wilayasLoading ? "جاري التحميل..." : "اختر الولاية"} /></SelectTrigger>
                 <SelectContent className="max-h-60">
                   {wilayas?.map(w => (
                     <SelectItem key={w.id} value={w.id.toString()}>{w.code} - {w.name_ar}</SelectItem>

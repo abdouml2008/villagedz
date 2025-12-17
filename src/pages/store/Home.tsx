@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSupabase, getSupabase } from '@/hooks/useSupabase';
+import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Link } from 'react-router-dom';
@@ -7,11 +7,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Product, Category } from '@/types/store';
 
 export default function Home() {
-  const { supabase, loading: supabaseLoading } = useSupabase();
-
-  const { data: categories } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
-    enabled: !!supabase,
     queryFn: async () => {
       const client = await getSupabase();
       const { data, error } = await client.from('categories').select('*');
@@ -20,9 +17,8 @@ export default function Home() {
     }
   });
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ['featured-products'],
-    enabled: !!supabase,
     queryFn: async () => {
       const client = await getSupabase();
       const { data, error } = await client
@@ -35,16 +31,7 @@ export default function Home() {
     }
   });
 
-  if (supabaseLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
+  const isLoading = categoriesLoading && productsLoading;
 
   return (
     <StoreLayout>
@@ -72,16 +59,26 @@ export default function Home() {
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">الأقسام</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {categories?.map(category => (
-              <Link
-                key={category.id}
-                to={`/category/${category.slug}`}
-                className="bg-card rounded-2xl p-8 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border group"
-              >
-                <span className="text-5xl mb-4 block group-hover:scale-110 transition-transform">{category.icon}</span>
-                <h3 className="text-xl font-semibold">{category.name_ar}</h3>
-              </Link>
-            ))}
+            {categoriesLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="bg-card rounded-2xl p-8 h-40 animate-pulse" />
+              ))
+            ) : categories && categories.length > 0 ? (
+              categories.map(category => (
+                <Link
+                  key={category.id}
+                  to={`/category/${category.slug}`}
+                  className="bg-card rounded-2xl p-8 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border group"
+                >
+                  <span className="text-5xl mb-4 block group-hover:scale-110 transition-transform">{category.icon}</span>
+                  <h3 className="text-xl font-semibold">{category.name_ar}</h3>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-4 text-center py-8 text-muted-foreground">
+                لا توجد أقسام
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -90,7 +87,7 @@ export default function Home() {
       <section className="py-16 px-4 bg-secondary/30">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">أحدث المنتجات</h2>
-          {isLoading ? (
+          {productsLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
