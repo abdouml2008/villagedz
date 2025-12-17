@@ -16,75 +16,52 @@ export function Logo({ className = '', showText = true }: LogoProps) {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Background Circle */}
-          <circle
-            cx="24"
-            cy="24"
-            r="22"
+          {/* Background Shape - Modern rounded square */}
+          <rect
+            x="2"
+            y="2"
+            width="44"
+            height="44"
+            rx="12"
             className="fill-primary"
           />
           
-          {/* House/Village Shape */}
+          {/* Letter V stylized */}
           <path
-            d="M24 10L10 22V38H18V28H30V38H38V22L24 10Z"
-            className="fill-primary-foreground"
+            d="M14 14L24 34L34 14"
+            className="stroke-primary-foreground"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
           />
           
-          {/* Door */}
-          <rect
-            x="21"
-            y="28"
-            width="6"
-            height="10"
-            rx="1"
-            className="fill-primary"
-          />
-          
-          {/* Window Left */}
-          <rect
-            x="13"
-            y="24"
-            width="4"
-            height="4"
-            rx="0.5"
-            className="fill-primary/80"
-          />
-          
-          {/* Window Right */}
-          <rect
-            x="31"
-            y="24"
-            width="4"
-            height="4"
-            rx="0.5"
-            className="fill-primary/80"
-          />
-          
-          {/* Roof Accent */}
+          {/* Small house icon on top of V */}
           <path
-            d="M24 10L10 22H38L24 10Z"
+            d="M24 8L18 13H30L24 8Z"
             className="fill-accent"
           />
-          
-          {/* Chimney */}
           <rect
-            x="32"
-            y="14"
-            width="4"
-            height="8"
-            rx="0.5"
+            x="21"
+            y="13"
+            width="6"
+            height="5"
             className="fill-primary-foreground"
           />
+          
+          {/* Decorative dots */}
+          <circle cx="10" cy="38" r="2" className="fill-accent" />
+          <circle cx="38" cy="38" r="2" className="fill-accent" />
         </svg>
         
         {/* Glow Effect */}
-        <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-primary/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
       {/* Logo Text */}
       {showText && (
         <div className="flex flex-col">
-          <span className="text-2xl md:text-3xl font-bold text-gradient leading-none">
+          <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-none tracking-tight">
             Village
           </span>
           <span className="text-[10px] md:text-xs text-muted-foreground font-medium tracking-wider">
@@ -104,13 +81,19 @@ export function LogoMark({ className = '' }: { className?: string }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle cx="24" cy="24" r="22" className="fill-primary" />
-      <path d="M24 10L10 22V38H18V28H30V38H38V22L24 10Z" className="fill-primary-foreground" />
-      <rect x="21" y="28" width="6" height="10" rx="1" className="fill-primary" />
-      <rect x="13" y="24" width="4" height="4" rx="0.5" className="fill-primary/80" />
-      <rect x="31" y="24" width="4" height="4" rx="0.5" className="fill-primary/80" />
-      <path d="M24 10L10 22H38L24 10Z" className="fill-accent" />
-      <rect x="32" y="14" width="4" height="8" rx="0.5" className="fill-primary-foreground" />
+      <rect x="2" y="2" width="44" height="44" rx="12" className="fill-primary" />
+      <path
+        d="M14 14L24 34L34 14"
+        className="stroke-primary-foreground"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path d="M24 8L18 13H30L24 8Z" className="fill-accent" />
+      <rect x="21" y="13" width="6" height="5" className="fill-primary-foreground" />
+      <circle cx="10" cy="38" r="2" className="fill-accent" />
+      <circle cx="38" cy="38" r="2" className="fill-accent" />
     </svg>
   );
 }
