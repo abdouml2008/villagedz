@@ -23,7 +23,7 @@ export default function AdminProducts() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '' });
+  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -104,7 +104,9 @@ export default function AdminProducts() {
         sizes: data.sizes ? data.sizes.split(',').map(s => s.trim()) : [],
         colors: data.colors ? data.colors.split(',').map(c => c.trim()) : [],
         min_quantity: data.min_quantity ? parseInt(data.min_quantity) : 1,
-        max_quantity: data.max_quantity ? parseInt(data.max_quantity) : null
+        max_quantity: data.max_quantity ? parseInt(data.max_quantity) : null,
+        discount_quantity: data.discount_quantity ? parseInt(data.discount_quantity) : null,
+        discount_percentage: data.discount_percentage ? parseFloat(data.discount_percentage) : null
       };
       if (editProduct) {
         const { error } = await client.from('products').update(productData).eq('id', editProduct.id);
@@ -145,7 +147,7 @@ export default function AdminProducts() {
   });
 
   const resetForm = () => {
-    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '' });
+    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '' });
     setEditProduct(null);
     setImageFile(null);
     setImagePreview(null);
@@ -163,7 +165,9 @@ export default function AdminProducts() {
       sizes: product.sizes?.join(', ') || '',
       colors: product.colors?.join(', ') || '',
       min_quantity: product.min_quantity?.toString() || '1',
-      max_quantity: product.max_quantity?.toString() || ''
+      max_quantity: product.max_quantity?.toString() || '',
+      discount_quantity: product.discount_quantity?.toString() || '',
+      discount_percentage: product.discount_percentage?.toString() || ''
     });
     setImageFile(null);
     setImagePreview(null);
@@ -249,6 +253,14 @@ export default function AdminProducts() {
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>الحد الأدنى للكمية</Label><Input type="number" min="1" value={form.min_quantity} onChange={e => setForm({...form, min_quantity: e.target.value})} placeholder="1" /></div>
                   <div><Label>الحد الأقصى للكمية</Label><Input type="number" min="1" value={form.max_quantity} onChange={e => setForm({...form, max_quantity: e.target.value})} placeholder="غير محدود" /></div>
+                </div>
+                <div className="border-t border-border pt-4">
+                  <Label className="text-base font-semibold">خصم الكمية</Label>
+                  <p className="text-sm text-muted-foreground mb-3">تطبيق خصم عند شراء كمية معينة أو أكثر</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>الكمية المطلوبة</Label><Input type="number" min="2" value={form.discount_quantity} onChange={e => setForm({...form, discount_quantity: e.target.value})} placeholder="مثال: 5" /></div>
+                    <div><Label>نسبة الخصم (%)</Label><Input type="number" min="1" max="100" value={form.discount_percentage} onChange={e => setForm({...form, discount_percentage: e.target.value})} placeholder="مثال: 10" /></div>
+                  </div>
                 </div>
                 <Button type="submit" disabled={saveMutation.isPending || uploading} className="w-full">
                   {uploading ? 'جاري رفع الصورة...' : saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}

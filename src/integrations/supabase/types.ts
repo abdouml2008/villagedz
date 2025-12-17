@@ -169,6 +169,8 @@ export type Database = {
           colors: string[] | null
           created_at: string
           description: string | null
+          discount_percentage: number | null
+          discount_quantity: number | null
           id: string
           image_url: string | null
           images: string[] | null
@@ -186,6 +188,8 @@ export type Database = {
           colors?: string[] | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
+          discount_quantity?: number | null
           id?: string
           image_url?: string | null
           images?: string[] | null
@@ -203,6 +207,8 @@ export type Database = {
           colors?: string[] | null
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
+          discount_quantity?: number | null
           id?: string
           image_url?: string | null
           images?: string[] | null

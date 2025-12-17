@@ -80,7 +80,16 @@ export default function ProductDetail() {
 
           <div className="space-y-6">
             <h1 className="text-4xl font-bold">{product.name}</h1>
-            <p className="text-3xl font-bold text-primary">{product.price} دج</p>
+            <div>
+              <p className="text-3xl font-bold text-primary">{product.price} دج</p>
+              {product.discount_quantity && product.discount_percentage && (
+                <p className="text-green-600 text-sm mt-1 flex items-center gap-1">
+                  <span className="bg-green-500/10 px-2 py-0.5 rounded-full">
+                    اشترِ {product.discount_quantity} أو أكثر واحصل على خصم {product.discount_percentage}%
+                  </span>
+                </p>
+              )}
+            </div>
             <p className="text-muted-foreground text-lg">{product.description}</p>
 
             {product.sizes && product.sizes.length > 0 && (

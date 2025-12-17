@@ -21,6 +21,8 @@ export interface Product {
   is_active: boolean;
   min_quantity: number | null;
   max_quantity: number | null;
+  discount_quantity: number | null;
+  discount_percentage: number | null;
   created_at: string;
   updated_at: string;
   category?: Category;
