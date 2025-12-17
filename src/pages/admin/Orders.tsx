@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -27,6 +27,7 @@ const statusColors: Record<string, string> = {
 export default function AdminOrders() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -35,9 +36,10 @@ export default function AdminOrders() {
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['admin-orders'],
-    enabled: !!user,
+    enabled: !!user && !!supabase,
     queryFn: async () => {
-      const { data } = await supabase
+      const client = await getSupabase();
+      const { data } = await client
         .from('orders')
         .select('*, wilaya:wilayas(*), items:order_items(*, product:products(*))')
         .order('created_at', { ascending: false });
@@ -47,7 +49,8 @@ export default function AdminOrders() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+      const client = await getSupabase();
+      const { error } = await client.from('orders').update({ status }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -56,7 +59,7 @@ export default function AdminOrders() {
     }
   });
 
-  if (loading || !user) return null;
+  if (loading || supabaseLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">

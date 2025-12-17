@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Link } from 'react-router-dom';
@@ -7,10 +7,14 @@ import { ArrowLeft } from 'lucide-react';
 import { Product, Category } from '@/types/store';
 
 export default function Home() {
+  const { supabase, loading: supabaseLoading } = useSupabase();
+
   const { data: categories } = useQuery({
     queryKey: ['categories'],
+    enabled: !!supabase,
     queryFn: async () => {
-      const { data, error } = await supabase.from('categories').select('*');
+      const client = await getSupabase();
+      const { data, error } = await client.from('categories').select('*');
       if (error) throw error;
       return data as Category[];
     }
@@ -18,8 +22,10 @@ export default function Home() {
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['featured-products'],
+    enabled: !!supabase,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const client = await getSupabase();
+      const { data, error } = await client
         .from('products')
         .select('*')
         .eq('is_active', true)
@@ -28,6 +34,17 @@ export default function Home() {
       return data as Product[];
     }
   });
+
+  if (supabaseLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <StoreLayout>

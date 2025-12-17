@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Package, ShoppingCart, LogOut, LayoutDashboard } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, signOut, loading } = useAuth();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,12 +17,13 @@ export default function AdminDashboard() {
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
-    enabled: !!user,
+    enabled: !!user && !!supabase,
     queryFn: async () => {
+      const client = await getSupabase();
       const [products, orders, pendingOrders] = await Promise.all([
-        supabase.from('products').select('id', { count: 'exact' }),
-        supabase.from('orders').select('id', { count: 'exact' }),
-        supabase.from('orders').select('id', { count: 'exact' }).eq('status', 'pending')
+        client.from('products').select('id', { count: 'exact' }),
+        client.from('orders').select('id', { count: 'exact' }),
+        client.from('orders').select('id', { count: 'exact' }).eq('status', 'pending')
       ]);
       return {
         products: products.count || 0,
@@ -31,7 +33,7 @@ export default function AdminDashboard() {
     }
   });
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
+  if (loading || supabaseLoading) return <div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>;
   if (!user) return null;
 
   return (

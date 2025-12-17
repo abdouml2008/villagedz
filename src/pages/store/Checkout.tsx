@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { Wilaya } from '@/types/store';
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
@@ -26,8 +27,10 @@ export default function Checkout() {
 
   const { data: wilayas } = useQuery({
     queryKey: ['wilayas'],
+    enabled: !!supabase,
     queryFn: async () => {
-      const { data, error } = await supabase.from('wilayas').select('*').order('code');
+      const client = await getSupabase();
+      const { data, error } = await client.from('wilayas').select('*').order('code');
       if (error) throw error;
       return data as Wilaya[];
     }
@@ -52,7 +55,8 @@ export default function Checkout() {
 
     setLoading(true);
     try {
-      const { data: order, error: orderError } = await supabase
+      const client = await getSupabase();
+      const { data: order, error: orderError } = await client
         .from('orders')
         .insert({
           customer_first_name: form.firstName,
@@ -77,7 +81,7 @@ export default function Checkout() {
         price: item.product.price
       }));
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
+      const { error: itemsError } = await client.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
 
       clearCart();
@@ -90,6 +94,14 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  if (supabaseLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <StoreLayout>
