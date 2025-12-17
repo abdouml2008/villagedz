@@ -4,6 +4,7 @@ import { useCart } from '@/hooks/useCart';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
+import { Logo } from './Logo';
 
 export function StoreHeader() {
   const { totalItems } = useCart();
@@ -12,11 +13,9 @@ export function StoreHeader() {
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-village-sm">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-3xl font-bold text-gradient">Village</span>
-          </Link>
+          <Logo />
 
           <nav className="hidden md:flex items-center gap-8">
             <Link to="/category/men" className="text-foreground hover:text-primary transition-colors font-medium">
