@@ -85,6 +85,10 @@ export default function AdminAnalytics() {
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   const [compareMode, setCompareMode] = useState(false);
+  
+  // Second period for manual comparison
+  const [compare2StartDate, setCompare2StartDate] = useState<Date | undefined>(undefined);
+  const [compare2EndDate, setCompare2EndDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -97,8 +101,12 @@ export default function AdminAnalytics() {
   }, [timeRange, customStartDate, customEndDate]);
 
   const previousDateRange = useMemo(() => {
+    // Use manual dates if provided, otherwise calculate automatically
+    if (compare2StartDate && compare2EndDate) {
+      return { start: startOfDay(compare2StartDate), end: endOfDay(compare2EndDate) };
+    }
     return getPreviousPeriodRange(dateRange.start, dateRange.end);
-  }, [dateRange]);
+  }, [dateRange, compare2StartDate, compare2EndDate]);
 
   const fetchAnalytics = async (startDate: Date, endDate: Date) => {
     const client = await getSupabase();
@@ -329,22 +337,99 @@ export default function AdminAnalytics() {
             {/* Compare Mode Toggle */}
             <div className="flex items-center gap-2 mr-auto border-r border-border pr-4">
               <GitCompare className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">مقارنة مع الفترة السابقة</span>
-              <Switch checked={compareMode} onCheckedChange={setCompareMode} />
+              <span className="text-sm text-muted-foreground">مقارنة</span>
+              <Switch checked={compareMode} onCheckedChange={(checked) => {
+                setCompareMode(checked);
+                if (!checked) {
+                  setCompare2StartDate(undefined);
+                  setCompare2EndDate(undefined);
+                }
+              }} />
             </div>
           </div>
           
           {compareMode && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <span className="w-3 h-3 bg-primary rounded-full" />
-                الفترة الحالية: {format(dateRange.start, 'dd/MM/yyyy')} - {format(dateRange.end, 'dd/MM/yyyy')}
-              </span>
-              <span className="mx-4">|</span>
-              <span className="inline-flex items-center gap-2">
-                <span className="w-3 h-3 bg-muted-foreground rounded-full" />
-                الفترة السابقة: {format(previousDateRange.start, 'dd/MM/yyyy')} - {format(previousDateRange.end, 'dd/MM/yyyy')}
-              </span>
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Period 1 */}
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-3 h-3 bg-primary rounded-full" />
+                    <span className="font-medium">الفترة الأولى</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {format(dateRange.start, 'dd/MM/yyyy')} - {format(dateRange.end, 'dd/MM/yyyy')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    (يتم تحديدها من الأزرار أعلاه)
+                  </p>
+                </div>
+
+                {/* Period 2 */}
+                <div className="bg-muted/50 rounded-lg p-4 border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-3 h-3 bg-muted-foreground rounded-full" />
+                    <span className="font-medium">الفترة الثانية (للمقارنة)</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <CalendarIcon className="w-4 h-4" />
+                          {compare2StartDate ? format(compare2StartDate, 'dd/MM/yyyy') : 'من تاريخ'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compare2StartDate}
+                          onSelect={setCompare2StartDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <CalendarIcon className="w-4 h-4" />
+                          {compare2EndDate ? format(compare2EndDate, 'dd/MM/yyyy') : 'إلى تاريخ'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={compare2EndDate}
+                          onSelect={setCompare2EndDate}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    {(compare2StartDate || compare2EndDate) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setCompare2StartDate(undefined);
+                          setCompare2EndDate(undefined);
+                        }}
+                      >
+                        إعادة تعيين (تلقائي)
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {compare2StartDate && compare2EndDate 
+                      ? `${format(compare2StartDate, 'dd/MM/yyyy')} - ${format(compare2EndDate, 'dd/MM/yyyy')}`
+                      : `تلقائي: ${format(previousDateRange.start, 'dd/MM/yyyy')} - ${format(previousDateRange.end, 'dd/MM/yyyy')}`
+                    }
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
