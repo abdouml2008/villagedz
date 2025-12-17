@@ -10,8 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download, Printer } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+type OrderWithDetails = Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] };
 import {
   AlertDialog,
   AlertDialogAction,
@@ -164,6 +166,121 @@ export default function AdminOrders() {
     toast.success('تم تصدير الطلبات بنجاح');
   };
 
+  const printOrder = (order: OrderWithDetails) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsTotal = order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <title>طلب #${order.id.slice(0, 8)}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; padding: 20px; direction: rtl; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+          .header h1 { font-size: 24px; margin-bottom: 5px; }
+          .header p { color: #666; }
+          .section { margin-bottom: 20px; }
+          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; background: #f5f5f5; padding: 8px; }
+          .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+          .info-label { color: #666; }
+          .info-value { font-weight: 500; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { padding: 10px; text-align: right; border: 1px solid #ddd; }
+          th { background: #f5f5f5; font-weight: bold; }
+          .total-row { font-weight: bold; background: #f9f9f9; }
+          .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Village Store</h1>
+          <p>تفاصيل الطلب #${order.id.slice(0, 8)}</p>
+          <p>${new Date(order.created_at).toLocaleDateString('ar-DZ')} - ${new Date(order.created_at).toLocaleTimeString('ar-DZ')}</p>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">معلومات الزبون</div>
+          <div class="info-row">
+            <span class="info-label">الاسم الكامل:</span>
+            <span class="info-value">${order.customer_first_name} ${order.customer_last_name}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">رقم الهاتف:</span>
+            <span class="info-value">${order.customer_phone}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">الولاية:</span>
+            <span class="info-value">${order.wilaya?.name_ar || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">نوع التوصيل:</span>
+            <span class="info-value">${order.delivery_type === 'home' ? 'توصيل للمنزل' : 'توصيل للمكتب'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">الحالة:</span>
+            <span class="info-value">${statusLabels[order.status] || order.status}</span>
+          </div>
+          ${order.notes ? `<div class="info-row"><span class="info-label">ملاحظات:</span><span class="info-value">${order.notes}</span></div>` : ''}
+        </div>
+
+        <div class="section">
+          <div class="section-title">المنتجات</div>
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>المقاس</th>
+                <th>اللون</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>المجموع</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items?.map(item => `
+                <tr>
+                  <td>${item.product?.name || '-'}</td>
+                  <td>${item.size || '-'}</td>
+                  <td>${item.color || '-'}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.price} دج</td>
+                  <td>${item.price * item.quantity} دج</td>
+                </tr>
+              `).join('') || ''}
+              <tr>
+                <td colspan="5" style="text-align: left;">مجموع المنتجات:</td>
+                <td>${itemsTotal} دج</td>
+              </tr>
+              <tr>
+                <td colspan="5" style="text-align: left;">سعر التوصيل:</td>
+                <td>${order.delivery_price} دج</td>
+              </tr>
+              <tr class="total-row">
+                <td colspan="5" style="text-align: left;">المجموع الكلي:</td>
+                <td>${order.total_price} دج</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer">
+          <p>شكراً لتعاملكم معنا - Village Store</p>
+        </div>
+      </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 250);
+  };
+
   if (loading || supabaseLoading || roleLoading || !user || !hasRole) return null;
 
   return (
@@ -275,6 +392,11 @@ export default function AdminOrders() {
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  <Button onClick={() => printOrder(order)} variant="outline" size="sm">
+                    <Printer className="w-4 h-4 ml-2" />
+                    طباعة
+                  </Button>
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
