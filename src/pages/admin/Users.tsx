@@ -130,16 +130,18 @@ export default function AdminUsers() {
         throw new Error('لا يمكنك حذف حسابك الخاص');
       }
       
-      const { error } = await client
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      const response = await client.functions.invoke('delete-user', {
+        body: { userId },
+      });
       
-      if (error) throw error;
+      if (response.error) throw response.error;
+      if (response.data?.error) throw new Error(response.data.error);
+      
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('تم حذف صلاحية المستخدم');
+      toast.success('تم حذف الحساب بنجاح');
     },
     onError: (error: any) => {
       toast.error(error.message || 'خطأ في الحذف');
