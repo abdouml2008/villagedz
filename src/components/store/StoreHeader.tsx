@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 
 export function StoreHeader() {
   const { totalItems } = useCart();
@@ -32,7 +33,8 @@ export function StoreHeader() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Link 
               to={hasRole ? "/admin/dashboard" : "/admin"} 
               className="p-2 hover:bg-secondary rounded-full transition-colors"
