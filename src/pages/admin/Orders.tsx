@@ -8,9 +8,16 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download, Printer } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download, Printer, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 type OrderWithDetails = Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] };
@@ -139,13 +146,13 @@ export default function AdminOrders() {
     }
   });
 
-  const exportToExcel = () => {
-    if (!filteredOrders || filteredOrders.length === 0) {
+  const exportToExcel = (ordersToExport: OrderWithDetails[], fileName: string) => {
+    if (!ordersToExport || ordersToExport.length === 0) {
       toast.error('لا توجد طلبات للتصدير');
       return;
     }
 
-    const data = filteredOrders.map(order => ({
+    const data = ordersToExport.map(order => ({
       'رقم الطلب': order.id.slice(0, 8),
       'الاسم': `${order.customer_first_name} ${order.customer_last_name}`,
       'رقم الهاتف': order.customer_phone,
@@ -162,8 +169,26 @@ export default function AdminOrders() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'الطلبات');
-    XLSX.writeFile(wb, `orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `${fileName}_${new Date().toISOString().split('T')[0]}.xlsx`);
     toast.success('تم تصدير الطلبات بنجاح');
+  };
+
+  const exportByStatus = async (status: string) => {
+    const client = await getSupabase();
+    let query = client
+      .from('orders')
+      .select('*, wilaya:wilayas(*), items:order_items(*, product:products(*))')
+      .order('created_at', { ascending: false });
+    
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+    
+    const { data } = await query;
+    const ordersData = data as OrderWithDetails[];
+    
+    const statusName = status === 'all' ? 'all_orders' : `orders_${status}`;
+    exportToExcel(ordersData, statusName);
   };
 
   const printOrder = (order: OrderWithDetails) => {
@@ -341,10 +366,39 @@ export default function AdminOrders() {
                 <SelectItem value="cancelled">ملغى</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={exportToExcel} variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              تصدير Excel
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  تصدير Excel
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportToExcel(filteredOrders || [], 'orders_current')}>
+                  تصدير الحالي ({filteredOrders?.length || 0})
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => exportByStatus('all')}>
+                  جميع الطلبات
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('pending')}>
+                  الطلبات المعلقة ({counts?.pending || 0})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('confirmed')}>
+                  الطلبات المؤكدة ({counts?.confirmed || 0})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('shipped')}>
+                  الطلبات المشحونة ({counts?.shipped || 0})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('delivered')}>
+                  الطلبات المسلمة ({counts?.delivered || 0})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportByStatus('cancelled')}>
+                  الطلبات الملغاة ({counts?.cancelled || 0})
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
