@@ -4,13 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { getSupabase } from '@/hooks/useSupabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowRight, Plus, Trash2, Key, Edit, Mail } from 'lucide-react';
+import { Plus, Trash2, Key, Edit, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 const userSchema = z.object({
@@ -228,16 +229,11 @@ export default function AdminUsers() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/dashboard')}>
-              <ArrowRight className="size-5" />
-            </Button>
-            <h1 className="text-xl font-bold">إدارة المستخدمين</h1>
-          </div>
-          <div className="flex items-center gap-2">
+      <AdminHeader title="إدارة المستخدمين" />
+
+      {/* Header Actions */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-end gap-2">
             {/* Change Password Dialog */}
             <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
               <DialogTrigger asChild>
@@ -337,7 +333,6 @@ export default function AdminUsers() {
             )}
           </div>
         </div>
-      </header>
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, ArrowRight, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import { Product, Category } from '@/types/store';
 
 export default function AdminProducts() {
@@ -170,12 +171,7 @@ export default function AdminProducts() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to="/admin/dashboard" className="text-muted-foreground hover:text-foreground"><ArrowRight className="w-5 h-5" /></Link>
-          <h1 className="text-xl font-bold">إدارة المنتجات</h1>
-        </div>
-      </header>
+      <AdminHeader title="إدارة المنتجات" />
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">

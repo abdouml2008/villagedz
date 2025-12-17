@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
-import { Button } from '@/components/ui/button';
-import { Package, ShoppingCart, LogOut, LayoutDashboard, Users } from 'lucide-react';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { Package, ShoppingCart, LayoutDashboard, Users } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user, signOut, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { supabase, loading: supabaseLoading } = useSupabase();
   const { hasRole, isAdmin, loading: roleLoading } = useHasAnyRole();
   const navigate = useNavigate();
@@ -44,15 +44,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/admin/dashboard" className="text-2xl font-bold text-gradient">Village Admin</Link>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">الموقع</Link>
-            <Button variant="ghost" size="icon" onClick={() => signOut()}><LogOut className="w-5 h-5" /></Button>
-          </div>
-        </div>
-      </header>
+      <AdminHeader title="لوحة التحكم" showBackButton={false} showLogo={true} />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">لوحة التحكم</h1>
