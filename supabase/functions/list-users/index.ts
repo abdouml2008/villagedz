@@ -6,12 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CreateUserRequest {
-  email: string;
-  password: string;
-  role: 'admin' | 'user';
-}
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -21,7 +15,6 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    // Get the authorization header to verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "غير مصرح" }), {
@@ -30,7 +23,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Create client with user's token to verify they're an admin
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -43,70 +35,68 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Check if caller is admin
-    const { data: roleData, error: roleError } = await userClient.rpc('has_role', {
-      _user_id: callerUser.id,
-      _role: 'admin'
-    });
+    // Check if caller has any role
+    const { data: roleData } = await userClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', callerUser.id)
+      .maybeSingle();
     
-    if (roleError || !roleData) {
-      return new Response(JSON.stringify({ error: "صلاحية المدير مطلوبة" }), {
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: "صلاحية مطلوبة" }), {
         status: 403,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Parse request body
-    const { email, password, role }: CreateUserRequest = await req.json();
-
-    if (!email || !password) {
-      return new Response(JSON.stringify({ error: "البريد وكلمة المرور مطلوبان" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
+    const isAdmin = roleData.role === 'admin';
 
     // Create admin client with service role
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Create the new user
-    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirm the email
-    });
-
-    if (createError) {
-      console.error("Create user error:", createError);
-      return new Response(JSON.stringify({ error: createError.message }), {
+    // Get all auth users
+    const { data: authUsers, error: listError } = await adminClient.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error("List users error:", listError);
+      return new Response(JSON.stringify({ error: listError.message }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    // Update user_roles with email and role if needed
-    if (newUser.user) {
-      const updateData: any = { email: newUser.user.email };
-      if (role === 'admin') {
-        updateData.role = 'admin';
-      }
-      
-      const { error: updateRoleError } = await adminClient
-        .from('user_roles')
-        .update(updateData)
-        .eq('user_id', newUser.user.id);
-      
-      if (updateRoleError) {
-        console.error("Update role error:", updateRoleError);
-      }
+    // Get all user roles
+    const { data: userRoles } = await adminClient
+      .from('user_roles')
+      .select('*');
+
+    // Combine auth users with their roles
+    const users = authUsers.users.map(authUser => {
+      const roleRecord = userRoles?.find(r => r.user_id === authUser.id);
+      return {
+        id: authUser.id,
+        email: authUser.email,
+        role: roleRecord?.role || 'user',
+        created_at: authUser.created_at,
+        role_id: roleRecord?.id
+      };
+    });
+
+    // If not admin, only return current user's data
+    if (!isAdmin) {
+      const currentUser = users.find(u => u.id === callerUser.id);
+      return new Response(JSON.stringify({ 
+        users: currentUser ? [currentUser] : [],
+        isAdmin: false
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      user: { id: newUser.user?.id, email: newUser.user?.email } 
-    }), {
+    return new Response(JSON.stringify({ users, isAdmin: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
