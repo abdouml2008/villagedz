@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useSupabase } from './useSupabase';
+import { logger } from '@/lib/logger';
 
 export function useHasAnyRole() {
   const { user, loading: authLoading } = useAuth();
@@ -26,7 +27,7 @@ export function useHasAnyRole() {
           .single();
 
         if (error) {
-          console.error('Error checking role:', error);
+          logger.error('Error checking role:', error);
           setHasRole(false);
           setRole(null);
         } else {
@@ -34,7 +35,7 @@ export function useHasAnyRole() {
           setRole(data?.role || null);
         }
       } catch (err) {
-        console.error('Error checking role:', err);
+        logger.error('Error checking role:', err);
         setHasRole(false);
         setRole(null);
       } finally {

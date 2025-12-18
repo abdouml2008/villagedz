@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import { Product, Category } from '@/types/store';
+import { logger } from '@/lib/logger';
 
 export default function AdminProducts() {
   const { user, loading } = useAuth();
@@ -150,8 +151,8 @@ export default function AdminProducts() {
       toast.success('تم حذف المنتج');
     },
     onError: (error: Error) => {
-      console.error('Delete error:', error);
-      toast.error(`فشل الحذف: ${error.message}`);
+      logger.error('Delete error:', error);
+      toast.error('فشل الحذف');
     }
   });
 

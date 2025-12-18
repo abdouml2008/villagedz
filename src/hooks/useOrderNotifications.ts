@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export const useOrderNotifications = (enabled: boolean = true) => {
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -59,7 +60,7 @@ export const useOrderNotifications = (enabled: boolean = true) => {
       }, 200);
 
     } catch (error) {
-      console.error('Error playing notification sound:', error);
+      logger.error('Error playing notification sound:', error);
     }
   };
 
@@ -76,7 +77,7 @@ export const useOrderNotifications = (enabled: boolean = true) => {
           table: 'orders'
         },
         (payload) => {
-          console.log('New order received:', payload);
+          logger.log('New order received');
           playNotificationSound();
           toast.success('طلب جديد!', {
             description: `${payload.new.customer_first_name} ${payload.new.customer_last_name}`,

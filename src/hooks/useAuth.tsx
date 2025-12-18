@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => subscription.unsubscribe();
       } catch (error) {
-        console.error('Failed to initialize Supabase:', error);
+        logger.error('Failed to initialize Supabase:', error);
         setLoading(false);
       }
     };
