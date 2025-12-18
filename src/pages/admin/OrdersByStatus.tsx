@@ -78,26 +78,38 @@ export default function OrdersByStatus() {
     mutationFn: async ({ id, newStatus, oldStatus, orderItems }: { id: string; newStatus: string; oldStatus: string; orderItems: (OrderItem & { product: Product })[] }) => {
       const client = await getSupabase();
       
+      console.log('Updating order status:', { id, oldStatus, newStatus, orderItems });
+      
       // If changing TO cancelled, restore stock
       if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+        console.log('Restoring stock for cancelled order');
         for (const item of orderItems) {
+          console.log('Processing item:', item);
           if (item.product_id) {
-            await client.rpc('increase_product_stock', {
+            console.log('Calling increase_product_stock:', { p_product_id: item.product_id, p_quantity: item.quantity });
+            const { error: rpcError } = await client.rpc('increase_product_stock', {
               p_product_id: item.product_id,
               p_quantity: item.quantity
             });
+            if (rpcError) {
+              console.error('RPC error:', rpcError);
+            } else {
+              console.log('Stock restored successfully');
+            }
           }
         }
       }
       
       // If changing FROM cancelled to another status, decrease stock
       if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
+        console.log('Decreasing stock for reactivated order');
         for (const item of orderItems) {
           if (item.product_id) {
-            await client.rpc('decrease_product_stock', {
+            const { error: rpcError } = await client.rpc('decrease_product_stock', {
               p_product_id: item.product_id,
               p_quantity: item.quantity
             });
+            if (rpcError) console.error('RPC error:', rpcError);
           }
         }
       }
