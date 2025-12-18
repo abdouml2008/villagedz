@@ -70,6 +70,14 @@ export default function AdminProducts() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type - only allow images
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('نوع الملف غير مدعوم. يرجى رفع صورة (JPEG, PNG, WebP, GIF)');
+        return;
+      }
+      
+      // Validate file size - max 5MB
       if (file.size > 5 * 1024 * 1024) {
         toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
