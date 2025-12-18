@@ -106,39 +106,28 @@ export default function Checkout() {
     setCouponLoading(true);
     try {
       const client = await getSupabase();
-      const { data: coupon, error } = await client
-        .from('coupons')
-        .select('*')
-        .eq('code', couponCode.toUpperCase().trim())
-        .eq('is_active', true)
-        .maybeSingle();
+      // Use secure RPC to validate coupon without exposing coupon details
+      const { data: result, error } = await client.rpc('validate_coupon_code', {
+        p_code: couponCode.trim(),
+        p_order_amount: totalPrice
+      });
       
       if (error) throw error;
       
-      if (!coupon) {
-        toast.error('كود الكوبون غير صالح');
+      if (!result || !result.valid) {
+        toast.error(result?.error || 'كود الكوبون غير صالح');
         return;
       }
       
-      // Check expiration
-      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-        toast.error('انتهت صلاحية الكوبون');
-        return;
-      }
-      
-      // Check max uses
-      if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
-        toast.error('تم استنفاد عدد استخدامات الكوبون');
-        return;
-      }
-      
-      // Check min order amount
-      if (coupon.min_order_amount && totalPrice < coupon.min_order_amount) {
-        toast.error(`الحد الأدنى للطلب هو ${coupon.min_order_amount} دج`);
-        return;
-      }
-      
-      setAppliedCoupon(coupon as Coupon);
+      // Create a minimal coupon object with only what we need
+      setAppliedCoupon({
+        id: result.coupon_id,
+        code: couponCode.toUpperCase().trim(),
+        discount_type: result.discount_type,
+        discount_value: result.discount_value,
+        is_active: true,
+        created_at: ''
+      } as Coupon);
       toast.success('تم تطبيق الكوبون بنجاح!');
     } catch (error) {
       console.error(error);
