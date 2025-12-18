@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { useCart, getItemPrice } from '@/hooks/useCart';
@@ -13,6 +14,25 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Wilaya } from '@/types/store';
 import { Tag, X, Check, Loader2 } from 'lucide-react';
+
+// Validation schema for order form
+const orderFormSchema = z.object({
+  firstName: z.string()
+    .trim()
+    .min(2, 'الاسم يجب أن يكون حرفين على الأقل')
+    .max(50, 'الاسم يجب أن لا يتجاوز 50 حرف')
+    .regex(/^[\u0600-\u06FFa-zA-Z\s]+$/, 'الاسم يجب أن يحتوي على حروف فقط'),
+  lastName: z.string()
+    .trim()
+    .min(2, 'اللقب يجب أن يكون حرفين على الأقل')
+    .max(50, 'اللقب يجب أن لا يتجاوز 50 حرف')
+    .regex(/^[\u0600-\u06FFa-zA-Z\s]+$/, 'اللقب يجب أن يحتوي على حروف فقط'),
+  phone: z.string()
+    .trim()
+    .regex(/^0[567][0-9]{8}$/, 'رقم الهاتف يجب أن يكون بالصيغة 05XXXXXXXX أو 06XXXXXXXX أو 07XXXXXXXX'),
+  wilayaId: z.string().min(1, 'يرجى اختيار الولاية'),
+  deliveryType: z.enum(['home', 'office'])
+});
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -136,14 +156,28 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.phone || !form.wilayaId) {
-      toast.error('يرجى ملء جميع الحقول');
+    
+    // Validate form data with zod
+    const validationResult = orderFormSchema.safeParse(form);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
+    
     if (items.length === 0) {
       toast.error('السلة فارغة');
       return;
     }
+    
+    // Sanitize inputs
+    const sanitizedData = {
+      firstName: validationResult.data.firstName.trim(),
+      lastName: validationResult.data.lastName.trim(),
+      phone: validationResult.data.phone.trim(),
+      wilayaId: validationResult.data.wilayaId,
+      deliveryType: validationResult.data.deliveryType
+    };
 
     setLoading(true);
     try {
@@ -151,11 +185,11 @@ export default function Checkout() {
       const { data: order, error: orderError } = await client
         .from('orders')
         .insert({
-          customer_first_name: form.firstName,
-          customer_last_name: form.lastName,
-          customer_phone: form.phone,
-          wilaya_id: parseInt(form.wilayaId),
-          delivery_type: form.deliveryType,
+          customer_first_name: sanitizedData.firstName,
+          customer_last_name: sanitizedData.lastName,
+          customer_phone: sanitizedData.phone,
+          wilaya_id: parseInt(sanitizedData.wilayaId),
+          delivery_type: sanitizedData.deliveryType,
           delivery_price: deliveryPrice,
           total_price: finalTotal,
           coupon_code: appliedCoupon?.code || null,
