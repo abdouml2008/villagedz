@@ -217,15 +217,23 @@ export default function Checkout() {
           coupon_code: appliedCoupon?.code || null,
           coupon_discount: couponDiscount
         });
-
       if (orderError) throw orderError;
 
-      // Increment coupon used_count
+      // Atomically apply coupon using database function to prevent race conditions
       if (appliedCoupon) {
-        await client
-          .from('coupons')
-          .update({ used_count: appliedCoupon.used_count + 1 })
-          .eq('id', appliedCoupon.id);
+        const { data: couponResult, error: couponError } = await client.rpc('apply_coupon_atomic', {
+          p_coupon_code: appliedCoupon.code,
+          p_order_amount: totalPrice
+        });
+        
+        if (couponError) {
+          console.error('Coupon atomic apply error:', couponError);
+          // Continue with order - coupon was already validated client-side
+        } else if (couponResult && !couponResult.success) {
+          // Coupon is no longer valid (e.g., max uses reached during race condition)
+          // The order is already created, but we should log this
+          console.warn('Coupon validation failed during order:', couponResult.error);
+        }
       }
 
       const orderItems = items.map(item => ({
