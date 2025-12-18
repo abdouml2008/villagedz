@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { AdminRoute } from "@/components/auth/AdminRoute";
 import { lazy, Suspense } from "react";
 
 const Home = lazy(() => import("./pages/store/Home"));
@@ -51,14 +52,14 @@ const App = () => {
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/admin" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                    <Route path="/admin/products" element={<AdminProducts />} />
-                    <Route path="/admin/orders" element={<AdminOrders />} />
-                    <Route path="/admin/orders/:status" element={<OrdersByStatus />} />
-                    <Route path="/admin/users" element={<AdminUsers />} />
-                    <Route path="/admin/delivery-prices" element={<AdminDeliveryPrices />} />
-                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                    <Route path="/admin/coupons" element={<AdminCoupons />} />
+                    <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                    <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+                    <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+                    <Route path="/admin/orders/:status" element={<AdminRoute><OrdersByStatus /></AdminRoute>} />
+                    <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+                    <Route path="/admin/delivery-prices" element={<AdminRoute><AdminDeliveryPrices /></AdminRoute>} />
+                    <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+                    <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
                   </Routes>
                 </Suspense>
               </BrowserRouter>
