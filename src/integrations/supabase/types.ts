@@ -332,6 +332,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_coupon_atomic: {
+        Args: { p_coupon_code: string; p_order_amount: number }
+        Returns: Json
+      }
       decrease_product_stock: {
         Args: { p_product_id: string; p_quantity: number }
         Returns: undefined
