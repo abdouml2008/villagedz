@@ -182,9 +182,14 @@ export default function Checkout() {
     setLoading(true);
     try {
       const client = await getSupabase();
-      const { data: order, error: orderError } = await client
+      
+      // Generate order ID client-side to avoid needing SELECT after INSERT
+      const orderId = crypto.randomUUID();
+      
+      const { error: orderError } = await client
         .from('orders')
         .insert({
+          id: orderId,
           customer_first_name: sanitizedData.firstName,
           customer_last_name: sanitizedData.lastName,
           customer_phone: sanitizedData.phone,
@@ -194,9 +199,7 @@ export default function Checkout() {
           total_price: finalTotal,
           coupon_code: appliedCoupon?.code || null,
           coupon_discount: couponDiscount
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) throw orderError;
 
@@ -209,7 +212,7 @@ export default function Checkout() {
       }
 
       const orderItems = items.map(item => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: item.product.id,
         quantity: item.quantity,
         size: item.size || null,
