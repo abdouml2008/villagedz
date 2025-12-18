@@ -23,7 +23,7 @@ export default function AdminProducts() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '' });
+  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0' });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -114,7 +114,8 @@ export default function AdminProducts() {
         min_quantity: data.min_quantity ? parseInt(data.min_quantity) : 1,
         max_quantity: data.max_quantity ? parseInt(data.max_quantity) : null,
         discount_quantity: data.discount_quantity ? parseInt(data.discount_quantity) : null,
-        discount_percentage: data.discount_percentage ? parseFloat(data.discount_percentage) : null
+        discount_percentage: data.discount_percentage ? parseFloat(data.discount_percentage) : null,
+        stock: data.stock ? parseInt(data.stock) : 0
       };
       if (editProduct) {
         const { error } = await client.from('products').update(productData).eq('id', editProduct.id);
@@ -155,7 +156,7 @@ export default function AdminProducts() {
   });
 
   const resetForm = () => {
-    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '' });
+    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0' });
     setEditProduct(null);
     setImageFile(null);
     setImagePreview(null);
@@ -175,7 +176,8 @@ export default function AdminProducts() {
       min_quantity: product.min_quantity?.toString() || '1',
       max_quantity: product.max_quantity?.toString() || '',
       discount_quantity: product.discount_quantity?.toString() || '',
-      discount_percentage: product.discount_percentage?.toString() || ''
+      discount_percentage: product.discount_percentage?.toString() || '',
+      stock: product.stock?.toString() || '0'
     });
     setImageFile(null);
     setImagePreview(null);
@@ -258,6 +260,7 @@ export default function AdminProducts() {
 
                 <div><Label>المقاسات (مفصولة بفواصل)</Label><Input value={form.sizes} onChange={e => setForm({...form, sizes: e.target.value})} placeholder="S, M, L, XL" /></div>
                 <div><Label>الألوان (مفصولة بفواصل)</Label><Input value={form.colors} onChange={e => setForm({...form, colors: e.target.value})} placeholder="أسود, أبيض, أزرق" /></div>
+                <div><Label>المخزون المتاح</Label><Input type="number" min="0" value={form.stock} onChange={e => setForm({...form, stock: e.target.value})} placeholder="0" /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label>الحد الأدنى للكمية</Label><Input type="number" min="1" value={form.min_quantity} onChange={e => setForm({...form, min_quantity: e.target.value})} placeholder="1" /></div>
                   <div><Label>الحد الأقصى للكمية</Label><Input type="number" min="1" value={form.max_quantity} onChange={e => setForm({...form, max_quantity: e.target.value})} placeholder="غير محدود" /></div>
@@ -292,6 +295,9 @@ export default function AdminProducts() {
                     <h3 className="font-semibold truncate">{product.name}</h3>
                     <p className="text-primary font-bold">{product.price} دج</p>
                     <p className="text-sm text-muted-foreground">{product.category?.name_ar}</p>
+                    <p className={`text-sm font-medium ${(product.stock || 0) > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                      المخزون: {product.stock || 0}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
