@@ -75,8 +75,33 @@ export default function OrdersByStatus() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, newStatus }: { id: string; newStatus: string }) => {
+    mutationFn: async ({ id, newStatus, oldStatus, orderItems }: { id: string; newStatus: string; oldStatus: string; orderItems: (OrderItem & { product: Product })[] }) => {
       const client = await getSupabase();
+      
+      // If changing TO cancelled, restore stock
+      if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+        for (const item of orderItems) {
+          if (item.product_id) {
+            await client.rpc('increase_product_stock', {
+              p_product_id: item.product_id,
+              p_quantity: item.quantity
+            });
+          }
+        }
+      }
+      
+      // If changing FROM cancelled to another status, decrease stock
+      if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
+        for (const item of orderItems) {
+          if (item.product_id) {
+            await client.rpc('decrease_product_stock', {
+              p_product_id: item.product_id,
+              p_quantity: item.quantity
+            });
+          }
+        }
+      }
+      
       const { error } = await client.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
     },
@@ -89,8 +114,21 @@ export default function OrdersByStatus() {
   });
 
   const deleteOrder = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, orderStatus, orderItems }: { id: string; orderStatus: string; orderItems: (OrderItem & { product: Product })[] }) => {
       const client = await getSupabase();
+      
+      // If order was not cancelled, restore stock before deleting
+      if (orderStatus !== 'cancelled') {
+        for (const item of orderItems) {
+          if (item.product_id) {
+            await client.rpc('increase_product_stock', {
+              p_product_id: item.product_id,
+              p_quantity: item.quantity
+            });
+          }
+        }
+      }
+      
       await client.from('order_items').delete().eq('order_id', id);
       const { error } = await client.from('orders').delete().eq('id', id);
       if (error) throw error;
@@ -148,7 +186,7 @@ export default function OrdersByStatus() {
 
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className={`px-3 py-1 rounded-full text-sm ${statusColors[order.status]}`}>{statusLabels[order.status]}</span>
-                  <Select value={order.status} onValueChange={newStatus => updateStatus.mutate({ id: order.id, newStatus })}>
+                  <Select value={order.status} onValueChange={newStatus => updateStatus.mutate({ id: order.id, newStatus, oldStatus: order.status, orderItems: order.items })}>
                     <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(statusLabels).map(([value, label]) => (
@@ -173,7 +211,7 @@ export default function OrdersByStatus() {
                       </AlertDialogHeader>
                       <AlertDialogFooter className="gap-2">
                         <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteOrder.mutate(order.id)} className="bg-destructive text-destructive-foreground">
+                        <AlertDialogAction onClick={() => deleteOrder.mutate({ id: order.id, orderStatus: order.status, orderItems: order.items })} className="bg-destructive text-destructive-foreground">
                           حذف
                         </AlertDialogAction>
                       </AlertDialogFooter>

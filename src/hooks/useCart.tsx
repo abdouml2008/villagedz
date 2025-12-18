@@ -41,6 +41,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = (product: Product, quantity = 1, size?: string, color?: string) => {
     const minQty = product.min_quantity || 1;
     const maxQty = product.max_quantity;
+    const stock = product.stock;
+    
+    // Check stock availability
+    if (stock === 0) {
+      toast.error('هذا المنتج غير متوفر حالياً');
+      return;
+    }
     
     setItems(prev => {
       const existingIndex = prev.findIndex(
@@ -51,7 +58,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const updated = [...prev];
         let newQuantity = updated[existingIndex].quantity + quantity;
         
-        if (maxQty && newQuantity > maxQty) {
+        // Check against stock
+        if (newQuantity > stock) {
+          newQuantity = stock;
+          toast.error(`الكمية المتوفرة هي ${stock} فقط`);
+        } else if (maxQty && newQuantity > maxQty) {
           newQuantity = maxQty;
           toast.error(`الحد الأقصى للكمية هو ${maxQty}`);
         } else {
@@ -62,7 +73,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return updated;
       }
 
-      const finalQuantity = Math.max(minQty, quantity);
+      // Check if requested quantity exceeds stock
+      let finalQuantity = Math.max(minQty, quantity);
+      if (finalQuantity > stock) {
+        finalQuantity = stock;
+        toast.error(`الكمية المتوفرة هي ${stock} فقط`);
+      }
+      
       toast.success('تمت الإضافة إلى السلة');
       return [...prev, { product, quantity: finalQuantity, size, color }];
     });
@@ -81,9 +98,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     const minQty = item.product.min_quantity || 1;
     const maxQty = item.product.max_quantity;
+    const stock = item.product.stock;
     
     if (quantity < minQty) {
       removeItem(productId, size, color);
+      return;
+    }
+    
+    // Check against stock
+    if (quantity > stock) {
+      toast.error(`الكمية المتوفرة هي ${stock} فقط`);
       return;
     }
     

@@ -183,6 +183,23 @@ export default function Checkout() {
     try {
       const client = await getSupabase();
       
+      // Check stock availability for all items
+      for (const item of items) {
+        const { data: currentProduct, error: stockCheckError } = await client
+          .from('products')
+          .select('stock, name')
+          .eq('id', item.product.id)
+          .maybeSingle();
+        
+        if (stockCheckError) throw stockCheckError;
+        
+        if (!currentProduct || currentProduct.stock < item.quantity) {
+          toast.error(`الكمية المطلوبة من "${currentProduct?.name || item.product.name}" غير متوفرة. المتوفر: ${currentProduct?.stock || 0}`);
+          setLoading(false);
+          return;
+        }
+      }
+      
       // Generate order ID client-side to avoid needing SELECT after INSERT
       const orderId = crypto.randomUUID();
       
@@ -222,6 +239,14 @@ export default function Checkout() {
 
       const { error: itemsError } = await client.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
+
+      // Decrease stock for each product
+      for (const item of items) {
+        await client.rpc('decrease_product_stock', {
+          p_product_id: item.product.id,
+          p_quantity: item.quantity
+        });
+      }
 
       // Only clear cart if not a direct purchase
       if (!directItem) {

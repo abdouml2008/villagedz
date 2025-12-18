@@ -90,6 +90,20 @@ export default function ProductDetail() {
                 </p>
               )}
             </div>
+            
+            {/* Stock availability */}
+            <div className="flex items-center gap-2">
+              {product.stock > 0 ? (
+                <span className="bg-green-500/10 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
+                  متوفر ({product.stock} قطعة)
+                </span>
+              ) : (
+                <span className="bg-red-500/10 text-red-600 px-3 py-1 rounded-full text-sm font-medium">
+                  غير متوفر
+                </span>
+              )}
+            </div>
+            
             <p className="text-muted-foreground text-lg">{product.description}</p>
 
             {product.sizes && product.sizes.length > 0 && (
@@ -136,26 +150,28 @@ export default function ProductDetail() {
                 <button 
                   onClick={() => setQuantity(Math.max(product.min_quantity || 1, quantity - 1))} 
                   className="p-2 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
-                  disabled={quantity <= (product.min_quantity || 1)}
+                  disabled={quantity <= (product.min_quantity || 1) || product.stock === 0}
                 >
                   <Minus className="w-5 h-5" />
                 </button>
                 <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
                 <button 
-                  onClick={() => setQuantity(product.max_quantity ? Math.min(product.max_quantity, quantity + 1) : quantity + 1)} 
+                  onClick={() => {
+                    const maxAllowed = Math.min(product.stock, product.max_quantity || Infinity);
+                    setQuantity(Math.min(maxAllowed, quantity + 1));
+                  }} 
                   className="p-2 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
-                  disabled={product.max_quantity ? quantity >= product.max_quantity : false}
+                  disabled={quantity >= product.stock || (product.max_quantity ? quantity >= product.max_quantity : false)}
                 >
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
-              {(product.min_quantity || product.max_quantity) && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  {product.min_quantity && product.min_quantity > 1 && `الحد الأدنى: ${product.min_quantity}`}
-                  {product.min_quantity && product.min_quantity > 1 && product.max_quantity && ' | '}
-                  {product.max_quantity && `الحد الأقصى: ${product.max_quantity}`}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground mt-2">
+                {product.min_quantity && product.min_quantity > 1 && `الحد الأدنى: ${product.min_quantity}`}
+                {product.min_quantity && product.min_quantity > 1 && (product.max_quantity || product.stock > 0) && ' | '}
+                {product.max_quantity && `الحد الأقصى: ${Math.min(product.max_quantity, product.stock)}`}
+                {!product.max_quantity && product.stock > 0 && `المتوفر: ${product.stock}`}
+              </p>
             </div>
 
             <div className="flex gap-3">
@@ -164,13 +180,15 @@ export default function ProductDetail() {
                 variant="outline"
                 className="flex-1 text-lg py-6"
                 onClick={() => addItem(product, quantity, selectedSize, selectedColor)}
+                disabled={product.stock === 0 || quantity > product.stock}
               >
                 <ShoppingCart className="w-5 h-5 ml-2" />
-                أضف للسلة
+                {product.stock === 0 ? 'غير متوفر' : 'أضف للسلة'}
               </Button>
               <Button
                 size="lg"
-                className="flex-1 gradient-primary text-primary-foreground text-lg py-6 hover:opacity-90"
+                className="flex-1 gradient-primary text-primary-foreground text-lg py-6 hover:opacity-90 disabled:opacity-50"
+                disabled={product.stock === 0 || quantity > product.stock}
                 onClick={() => {
                   navigate('/checkout', {
                     state: {
@@ -185,7 +203,7 @@ export default function ProductDetail() {
                 }}
               >
                 <Zap className="w-5 h-5 ml-2" />
-                اطلب الآن
+                {product.stock === 0 ? 'غير متوفر' : 'اطلب الآن'}
               </Button>
             </div>
           </div>
