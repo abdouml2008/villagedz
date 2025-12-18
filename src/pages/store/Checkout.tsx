@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Wilaya } from '@/types/store';
 import { Tag, X, Check, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 // Validation schema for order form
 const orderFormSchema = z.object({
@@ -130,7 +131,7 @@ export default function Checkout() {
       } as Coupon);
       toast.success('تم تطبيق الكوبون بنجاح!');
     } catch (error) {
-      console.error(error);
+      logger.error('Coupon validation error:', error);
       toast.error('حدث خطأ أثناء التحقق من الكوبون');
     } finally {
       setCouponLoading(false);
@@ -216,12 +217,12 @@ export default function Checkout() {
         });
         
         if (couponError) {
-          console.error('Coupon atomic apply error:', couponError);
+          logger.error('Coupon atomic apply error:', couponError);
           // Continue with order - coupon was already validated client-side
         } else if (couponResult && !couponResult.success) {
           // Coupon is no longer valid (e.g., max uses reached during race condition)
           // The order is already created, but we should log this
-          console.warn('Coupon validation failed during order:', couponResult.error);
+          logger.warn('Coupon validation failed during order:', couponResult.error);
         }
       }
 
@@ -252,7 +253,7 @@ export default function Checkout() {
       toast.success('تم إرسال طلبك بنجاح!');
       navigate('/');
     } catch (error) {
-      console.error(error);
+      logger.error('Order submission error:', error);
       toast.error('حدث خطأ أثناء إرسال الطلب');
     } finally {
       setLoading(false);

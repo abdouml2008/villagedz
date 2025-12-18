@@ -19,6 +19,7 @@ import { format, subDays, subMonths, subYears, startOfDay, endOfDay, startOfMont
 import { ar } from 'date-fns/locale';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { logger } from '@/lib/logger';
 const statusLabels: Record<string, string> = {
   pending: 'معلق',
   confirmed: 'مؤكد',
@@ -346,7 +347,7 @@ export default function AdminAnalytics() {
       if (fileInputRef.current) fileInputRef.current.value = '';
       
     } catch (error) {
-      console.error('Excel processing error:', error);
+      logger.error('Excel processing error:', error);
       toast.error('حدث خطأ أثناء معالجة الملف');
     } finally {
       setIsProcessingExcel(false);

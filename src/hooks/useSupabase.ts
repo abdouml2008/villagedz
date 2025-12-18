@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 let supabaseInstance: SupabaseClient | null = null;
 let initPromise: Promise<SupabaseClient> | null = null;
@@ -28,7 +29,7 @@ export function useSupabase() {
         setClient(supabase);
         setLoading(false);
       }).catch((error) => {
-        console.error('Failed to load Supabase:', error);
+        logger.error('Failed to load Supabase:', error);
         setLoading(false);
       });
     }
