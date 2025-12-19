@@ -276,6 +276,45 @@ export type Database = {
           },
         ]
       }
+      promo_banners: {
+        Row: {
+          bg_gradient: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          link: string | null
+          link_text: string | null
+          sort_order: number | null
+          subtitle: string | null
+          title: string
+        }
+        Insert: {
+          bg_gradient?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link?: string | null
+          link_text?: string | null
+          sort_order?: number | null
+          subtitle?: string | null
+          title: string
+        }
+        Update: {
+          bg_gradient?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link?: string | null
+          link_text?: string | null
+          sort_order?: number | null
+          subtitle?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null

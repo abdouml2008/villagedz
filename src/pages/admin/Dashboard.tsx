@@ -7,7 +7,7 @@ import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { LowStockAlert } from '@/components/admin/LowStockAlert';
-import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag, FolderOpen } from 'lucide-react';
+import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag, FolderOpen, Megaphone } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -129,6 +129,11 @@ export default function AdminDashboard() {
             <FolderOpen className="w-12 h-12 text-orange-500 mb-4" />
             <h2 className="text-2xl font-bold mb-2">إدارة الأقسام</h2>
             <p className="text-muted-foreground">إضافة وتعديل أقسام المنتجات</p>
+          </Link>
+          <Link to="/admin/banners" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+            <Megaphone className="w-12 h-12 text-pink-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">البانرات الترويجية</h2>
+            <p className="text-muted-foreground">تخصيص البانرات في الصفحة الرئيسية</p>
           </Link>
         </div>
       </div>

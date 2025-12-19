@@ -1,73 +1,58 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getSupabase } from '@/hooks/useSupabase';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sparkles, Percent, Truck, Gift } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface PromoSlide {
-  id: number;
+interface PromoBanner {
+  id: string;
   title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  bgClass: string;
-  link?: string;
-  linkText?: string;
+  subtitle: string | null;
+  icon: string;
+  bg_gradient: string;
+  link: string | null;
+  link_text: string | null;
 }
-
-const promoSlides: PromoSlide[] = [
-  {
-    id: 1,
-    title: 'خصم 20% على جميع المنتجات',
-    subtitle: 'استخدم الكود: VILLAGE20',
-    icon: <Percent className="w-6 h-6" />,
-    bgClass: 'from-primary via-primary/90 to-primary/80',
-    link: '/cart',
-    linkText: 'تسوق الآن'
-  },
-  {
-    id: 2,
-    title: 'توصيل مجاني للطلبات فوق 5000 دج',
-    subtitle: 'لجميع ولايات الجزائر',
-    icon: <Truck className="w-6 h-6" />,
-    bgClass: 'from-green-600 via-green-500 to-emerald-500',
-  },
-  {
-    id: 3,
-    title: 'منتجات جديدة كل أسبوع',
-    subtitle: 'اكتشف آخر صيحات الموضة',
-    icon: <Sparkles className="w-6 h-6" />,
-    bgClass: 'from-purple-600 via-violet-500 to-indigo-500',
-  },
-  {
-    id: 4,
-    title: 'هدية مجانية مع كل طلب',
-    subtitle: 'لفترة محدودة فقط',
-    icon: <Gift className="w-6 h-6" />,
-    bgClass: 'from-orange-500 via-amber-500 to-yellow-500',
-  }
-];
 
 export function PromoBanner() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  const { data: banners } = useQuery({
+    queryKey: ['promo-banners'],
+    queryFn: async () => {
+      const client = await getSupabase();
+      const { data, error } = await client
+        .from('promo_banners')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data as PromoBanner[];
+    }
+  });
+
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !banners || banners.length <= 1) return;
     
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % banners.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, banners]);
+
+  if (!banners || banners.length === 0) return null;
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
+    setCurrentSlide((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + promoSlides.length) % promoSlides.length);
+    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-  const slide = promoSlides[currentSlide];
+  const slide = banners[currentSlide];
 
   return (
     <div 
@@ -75,21 +60,23 @@ export function PromoBanner() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className={`bg-gradient-to-r ${slide.bgClass} transition-all duration-500`}>
+      <div className={`bg-gradient-to-r ${slide.bg_gradient} transition-all duration-500`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3 md:py-4">
             {/* Nav Button - Previous */}
-            <button 
-              onClick={prevSlide}
-              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
-              aria-label="السابق"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            {banners.length > 1 && (
+              <button 
+                onClick={prevSlide}
+                className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
+                aria-label="السابق"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Content */}
             <div className="flex-1 flex items-center justify-center gap-4 text-white">
-              <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/20 animate-pulse">
+              <div className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-white/20 animate-pulse text-xl">
                 {slide.icon}
               </div>
               
@@ -97,47 +84,53 @@ export function PromoBanner() {
                 <p className="font-bold text-sm md:text-lg animate-fade-in">
                   {slide.title}
                 </p>
-                <p className="text-white/80 text-xs md:text-sm">
-                  {slide.subtitle}
-                </p>
+                {slide.subtitle && (
+                  <p className="text-white/80 text-xs md:text-sm">
+                    {slide.subtitle}
+                  </p>
+                )}
               </div>
 
-              {slide.link && (
+              {slide.link && slide.link_text && (
                 <Link
                   to={slide.link}
                   className="hidden md:inline-flex items-center gap-1 bg-white text-foreground px-4 py-1.5 rounded-full text-sm font-medium hover:bg-white/90 transition-colors"
                 >
-                  {slide.linkText}
+                  {slide.link_text}
                   <ChevronLeft className="w-4 h-4" />
                 </Link>
               )}
             </div>
 
             {/* Nav Button - Next */}
-            <button 
-              onClick={nextSlide}
-              className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
-              aria-label="التالي"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+            {banners.length > 1 && (
+              <button 
+                onClick={nextSlide}
+                className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors text-white"
+                aria-label="التالي"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-        {promoSlides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-1.5 h-1.5 rounded-full transition-all ${
-              index === currentSlide ? 'bg-white w-4' : 'bg-white/50'
-            }`}
-            aria-label={`الانتقال للشريحة ${index + 1}`}
-          />
-        ))}
-      </div>
+      {banners.length > 1 && (
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                index === currentSlide ? 'bg-white w-4' : 'bg-white/50'
+              }`}
+              aria-label={`الانتقال للشريحة ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
