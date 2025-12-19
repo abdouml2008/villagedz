@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
+import { PromoBanner } from '@/components/store/PromoBanner';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Product, Category } from '@/types/store';
@@ -48,6 +49,9 @@ export default function Home() {
 
   return (
     <StoreLayout>
+      {/* Promo Banner */}
+      <PromoBanner />
+      
       {/* Hero Section */}
       <section className="relative py-24 px-4 overflow-hidden">
         {/* Background Effects */}
