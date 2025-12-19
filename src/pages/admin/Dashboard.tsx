@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag } from 'lucide-react';
+import { LowStockAlert } from '@/components/admin/LowStockAlert';
+import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag, FolderOpen } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -52,6 +53,8 @@ export default function AdminDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">لوحة التحكم</h1>
+        
+        <LowStockAlert threshold={5} />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-card rounded-xl p-6 shadow-village-sm border border-border">
@@ -121,6 +124,11 @@ export default function AdminDashboard() {
             <Tag className="w-12 h-12 text-green-500 mb-4" />
             <h2 className="text-2xl font-bold mb-2">كوبونات الخصم</h2>
             <p className="text-muted-foreground">إنشاء وإدارة أكواد الخصم</p>
+          </Link>
+          <Link to="/admin/categories" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+            <FolderOpen className="w-12 h-12 text-orange-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">إدارة الأقسام</h2>
+            <p className="text-muted-foreground">إضافة وتعديل أقسام المنتجات</p>
           </Link>
         </div>
       </div>

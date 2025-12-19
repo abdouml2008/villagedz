@@ -2,6 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
+import { ProductImageGallery } from '@/components/store/ProductImageGallery';
+import { ProductReviews } from '@/components/store/ProductReviews';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
@@ -68,15 +70,11 @@ export default function ProductDetail() {
     <StoreLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-card rounded-2xl overflow-hidden shadow-village-md">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full aspect-square object-cover" />
-            ) : (
-              <div className="w-full aspect-square flex items-center justify-center bg-muted text-muted-foreground">
-                لا توجد صورة
-              </div>
-            )}
-          </div>
+          <ProductImageGallery
+            images={product.images || []}
+            mainImage={product.image_url}
+            productName={product.name}
+          />
 
           <div className="space-y-6">
             <h1 className="text-4xl font-bold">{product.name}</h1>
@@ -208,6 +206,9 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        {id && <ProductReviews productId={id} />}
       </div>
     </StoreLayout>
   );
