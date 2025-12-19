@@ -276,6 +276,47 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          is_approved: boolean | null
+          product_id: string
+          rating: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          is_approved?: boolean | null
+          product_id: string
+          rating: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          is_approved?: boolean | null
+          product_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
