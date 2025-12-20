@@ -107,10 +107,14 @@ export default function Checkout() {
     setCouponLoading(true);
     try {
       const client = await getSupabase();
+      // Get product IDs from cart items
+      const productIds = items.map(item => item.product.id);
+      
       // Use secure RPC to validate coupon without exposing coupon details
       const { data: result, error } = await client.rpc('validate_coupon_code', {
         p_code: couponCode.trim(),
-        p_order_amount: totalPrice
+        p_order_amount: totalPrice,
+        p_product_ids: productIds
       });
       
       if (error) throw error;
@@ -127,6 +131,7 @@ export default function Checkout() {
         discount_type: result.discount_type,
         discount_value: result.discount_value,
         is_active: true,
+        applies_to_all: result.applies_to_all,
         created_at: ''
       } as Coupon);
       toast.success('تم تطبيق الكوبون بنجاح!');
@@ -211,9 +216,11 @@ export default function Checkout() {
 
       // Atomically apply coupon using database function to prevent race conditions
       if (appliedCoupon) {
+        const productIds = items.map(item => item.product.id);
         const { data: couponResult, error: couponError } = await client.rpc('apply_coupon_atomic', {
           p_coupon_code: appliedCoupon.code,
-          p_order_amount: totalPrice
+          p_order_amount: totalPrice,
+          p_product_ids: productIds
         });
         
         if (couponError) {

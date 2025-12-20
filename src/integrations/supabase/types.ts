@@ -41,8 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_products: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_products_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
+          applies_to_all: boolean | null
           code: string
           created_at: string
           discount_type: string
@@ -55,6 +92,7 @@ export type Database = {
           used_count: number | null
         }
         Insert: {
+          applies_to_all?: boolean | null
           code: string
           created_at?: string
           discount_type?: string
@@ -67,6 +105,7 @@ export type Database = {
           used_count?: number | null
         }
         Update: {
+          applies_to_all?: boolean | null
           code?: string
           created_at?: string
           discount_type?: string
@@ -412,10 +451,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      apply_coupon_atomic: {
-        Args: { p_coupon_code: string; p_order_amount: number }
-        Returns: Json
-      }
+      apply_coupon_atomic:
+        | {
+            Args: { p_coupon_code: string; p_order_amount: number }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_coupon_code: string
+              p_order_amount: number
+              p_product_ids?: string[]
+            }
+            Returns: Json
+          }
       decrease_product_stock: {
         Args: { p_product_id: string; p_quantity: number }
         Returns: undefined
@@ -431,10 +479,16 @@ export type Database = {
         Args: { p_product_id: string; p_quantity: number }
         Returns: undefined
       }
-      validate_coupon_code: {
-        Args: { p_code: string; p_order_amount: number }
-        Returns: Json
-      }
+      validate_coupon_code:
+        | { Args: { p_code: string; p_order_amount: number }; Returns: Json }
+        | {
+            Args: {
+              p_code: string
+              p_order_amount: number
+              p_product_ids?: string[]
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "admin" | "user"
