@@ -71,11 +71,15 @@ export default function AdminCategories() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.name_ar || !formData.slug) {
-      toast.error('جميع الحقول مطلوبة');
+    if (!formData.name || !formData.name_ar) {
+      toast.error('يرجى إدخال اسم القسم');
       return;
     }
-    saveMutation.mutate(formData);
+    const dataToSave = {
+      ...formData,
+      slug: formData.slug || generateSlug(formData.name)
+    };
+    saveMutation.mutate(dataToSave);
   };
 
   const generateSlug = (name: string) => {
@@ -120,11 +124,11 @@ export default function AdminCategories() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">الرابط (Slug)</label>
+                  <label className="text-sm font-medium">الرابط (Slug) - اختياري</label>
                   <Input
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="electronics"
+                    placeholder="يُولّد تلقائيًا من الاسم"
                     dir="ltr"
                   />
                 </div>
