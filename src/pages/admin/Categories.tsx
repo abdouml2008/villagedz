@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSupabase } from '@/hooks/useSupabase';
+import { useSupabase } from '@/hooks/useSupabase';
+import { useAuth } from '@/hooks/useAuth';
+import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,29 +13,40 @@ import { toast } from 'sonner';
 import { Category } from '@/types/store';
 
 export default function AdminCategories() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { hasRole, loading: roleLoading } = useHasAnyRole();
+  const { supabase, loading: supabaseLoading } = useSupabase();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({ name: '', name_ar: '', slug: '', icon: '' });
 
+  useEffect(() => {
+    if (!authLoading && !roleLoading && !user) {
+      navigate('/admin');
+    }
+  }, [user, authLoading, roleLoading, navigate]);
+
   const { data: categories, isLoading } = useQuery({
     queryKey: ['admin-categories'],
     queryFn: async () => {
-      const client = await getSupabase();
-      const { data, error } = await client.from('categories').select('*').order('created_at', { ascending: false });
+      if (!supabase) throw new Error('Supabase not initialized');
+      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data as Category[];
-    }
+    },
+    enabled: !!supabase && !!user
   });
 
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const client = await getSupabase();
+      if (!supabase) throw new Error('Supabase not initialized');
       if (editingCategory) {
-        const { error } = await client.from('categories').update(data).eq('id', editingCategory.id);
+        const { error } = await supabase.from('categories').update(data).eq('id', editingCategory.id);
         if (error) throw error;
       } else {
-        const { error } = await client.from('categories').insert(data);
+        const { error } = await supabase.from('categories').insert(data);
         if (error) throw error;
       }
     },
@@ -41,20 +55,26 @@ export default function AdminCategories() {
       toast.success(editingCategory ? 'تم تحديث القسم' : 'تم إضافة القسم');
       resetForm();
     },
-    onError: () => toast.error('حدث خطأ')
+    onError: (error) => {
+      console.error('Save error:', error);
+      toast.error('حدث خطأ - تأكد من صلاحياتك');
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const client = await getSupabase();
-      const { error } = await client.from('categories').delete().eq('id', id);
+      if (!supabase) throw new Error('Supabase not initialized');
+      const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success('تم حذف القسم');
     },
-    onError: () => toast.error('لا يمكن حذف القسم (قد يحتوي على منتجات)')
+    onError: (error) => {
+      console.error('Delete error:', error);
+      toast.error('لا يمكن حذف القسم (قد يحتوي على منتجات أو ليس لديك صلاحية)');
+    }
   });
 
   const resetForm = () => {
@@ -85,6 +105,18 @@ export default function AdminCategories() {
   const generateSlug = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
   };
+
+  if (authLoading || roleLoading || supabaseLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" dir="rtl">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!user || !hasRole) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
