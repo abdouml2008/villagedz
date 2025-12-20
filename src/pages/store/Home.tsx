@@ -15,7 +15,9 @@ export default function Home() {
       const { data, error } = await client.from('categories').select('*');
       if (error) throw error;
       return data as Category[];
-    }
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const { data: products, isLoading: productsLoading } = useQuery({
