@@ -1,8 +1,21 @@
 import { Link } from 'react-router-dom';
 import { LogoMark } from './Logo';
 import { Facebook, Instagram, Phone } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export function StoreFooter() {
+  const { data: categories = [] } = useQuery({
+    queryKey: ['footer-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
   return (
     <footer className="relative bg-card border-t border-border mt-16 overflow-hidden">
       {/* Background Pattern */}
@@ -38,10 +51,15 @@ export function StoreFooter() {
           <div>
             <h4 className="font-semibold mb-4 text-foreground">الأقسام</h4>
             <div className="flex flex-col gap-2">
-              <Link to="/category/men" className="text-muted-foreground hover:text-primary transition-colors text-sm">ملابس رجالية</Link>
-              <Link to="/category/women" className="text-muted-foreground hover:text-primary transition-colors text-sm">ملابس نسائية</Link>
-              <Link to="/category/kids" className="text-muted-foreground hover:text-primary transition-colors text-sm">ملابس أطفال</Link>
-              <Link to="/category/other" className="text-muted-foreground hover:text-primary transition-colors text-sm">أغراض أخرى</Link>
+              {categories.map((category) => (
+                <Link 
+                  key={category.id}
+                  to={`/category/${category.slug}`} 
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                >
+                  {category.name_ar}
+                </Link>
+              ))}
             </div>
           </div>
           <div>

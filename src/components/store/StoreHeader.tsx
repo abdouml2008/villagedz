@@ -7,12 +7,25 @@ import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { SearchDialog } from './SearchDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export function StoreHeader() {
   const { totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { hasRole } = useHasAnyRole();
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['header-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
 
   return (
     <>
@@ -22,18 +35,15 @@ export function StoreHeader() {
             <Logo />
 
             <nav className="hidden md:flex items-center gap-8">
-              <Link to="/category/men" className="text-foreground hover:text-primary transition-colors font-medium">
-                رجالي
-              </Link>
-              <Link to="/category/women" className="text-foreground hover:text-primary transition-colors font-medium">
-                نسائي
-              </Link>
-              <Link to="/category/kids" className="text-foreground hover:text-primary transition-colors font-medium">
-                أطفال
-              </Link>
-              <Link to="/category/other" className="text-foreground hover:text-primary transition-colors font-medium">
-                أخرى
-              </Link>
+              {categories.map((category) => (
+                <Link 
+                  key={category.id}
+                  to={`/category/${category.slug}`} 
+                  className="text-foreground hover:text-primary transition-colors font-medium"
+                >
+                  {category.name_ar}
+                </Link>
+              ))}
             </nav>
 
             <div className="flex items-center gap-1">
@@ -70,18 +80,16 @@ export function StoreHeader() {
 
         {menuOpen && (
           <nav className="md:hidden mt-4 pb-4 flex flex-col gap-4 border-t border-border pt-4">
-            <Link to="/category/men" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setMenuOpen(false)}>
-              رجالي
-            </Link>
-            <Link to="/category/women" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setMenuOpen(false)}>
-              نسائي
-            </Link>
-            <Link to="/category/kids" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setMenuOpen(false)}>
-              أطفال
-            </Link>
-            <Link to="/category/other" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setMenuOpen(false)}>
-              أخرى
-            </Link>
+            {categories.map((category) => (
+              <Link 
+                key={category.id}
+                to={`/category/${category.slug}`} 
+                className="text-foreground hover:text-primary transition-colors font-medium" 
+                onClick={() => setMenuOpen(false)}
+              >
+                {category.name_ar}
+              </Link>
+            ))}
             <Link 
               to={hasRole ? "/admin/dashboard" : "/admin"} 
               className="text-primary hover:text-primary/80 transition-colors font-medium flex items-center gap-2"
