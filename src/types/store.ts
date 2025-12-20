@@ -90,5 +90,13 @@ export interface Coupon {
   used_count: number;
   is_active: boolean;
   expires_at: string | null;
+  applies_to_all: boolean;
+  created_at: string;
+}
+
+export interface CouponProduct {
+  id: string;
+  coupon_id: string;
+  product_id: string;
   created_at: string;
 }

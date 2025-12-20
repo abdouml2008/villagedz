@@ -11,9 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Tag, Percent, DollarSign, Calendar, Users } from 'lucide-react';
-import { Coupon } from '@/types/store';
+import { Plus, Edit, Trash2, Tag, Percent, DollarSign, Calendar, Users, Package } from 'lucide-react';
+import { Coupon, Product } from '@/types/store';
 
 export default function AdminCoupons() {
   const { user, loading } = useAuth();
@@ -23,6 +25,7 @@ export default function AdminCoupons() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editCoupon, setEditCoupon] = useState<Coupon | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [form, setForm] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -30,7 +33,8 @@ export default function AdminCoupons() {
     min_order_amount: '',
     max_uses: '',
     expires_at: '',
-    is_active: true
+    is_active: true,
+    applies_to_all: true
   });
 
   useEffect(() => {
@@ -50,6 +54,36 @@ export default function AdminCoupons() {
     }
   });
 
+  const { data: products } = useQuery({
+    queryKey: ['admin-products-for-coupons'],
+    enabled: !!user && !!supabase,
+    queryFn: async () => {
+      const client = await getSupabase();
+      const { data, error } = await client.from('products').select('id, name, image_url').order('name');
+      if (error) throw error;
+      return data as Pick<Product, 'id' | 'name' | 'image_url'>[];
+    }
+  });
+
+  const { data: couponProducts } = useQuery({
+    queryKey: ['coupon-products', editCoupon?.id],
+    enabled: !!editCoupon && !!supabase,
+    queryFn: async () => {
+      if (!editCoupon) return [];
+      const client = await getSupabase();
+      const { data, error } = await client.from('coupon_products').select('product_id').eq('coupon_id', editCoupon.id);
+      if (error) throw error;
+      return data.map(cp => cp.product_id);
+    }
+  });
+
+  // Load coupon products when editing
+  useEffect(() => {
+    if (couponProducts) {
+      setSelectedProductIds(couponProducts);
+    }
+  }, [couponProducts]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
       const client = await getSupabase();
@@ -60,18 +94,44 @@ export default function AdminCoupons() {
         min_order_amount: data.min_order_amount ? parseFloat(data.min_order_amount) : null,
         max_uses: data.max_uses ? parseInt(data.max_uses) : null,
         expires_at: data.expires_at || null,
-        is_active: data.is_active
+        is_active: data.is_active,
+        applies_to_all: data.applies_to_all
       };
+      
+      let couponId: string;
+      
       if (editCoupon) {
         const { error } = await client.from('coupons').update(couponData).eq('id', editCoupon.id);
         if (error) throw error;
+        couponId = editCoupon.id;
       } else {
-        const { error } = await client.from('coupons').insert(couponData);
+        const { data: newCoupon, error } = await client.from('coupons').insert(couponData).select('id').single();
         if (error) throw error;
+        couponId = newCoupon.id;
+      }
+
+      // Update coupon products if not applies_to_all
+      if (!data.applies_to_all) {
+        // Delete existing coupon products
+        await client.from('coupon_products').delete().eq('coupon_id', couponId);
+        
+        // Insert new coupon products
+        if (selectedProductIds.length > 0) {
+          const couponProductsData = selectedProductIds.map(productId => ({
+            coupon_id: couponId,
+            product_id: productId
+          }));
+          const { error: cpError } = await client.from('coupon_products').insert(couponProductsData);
+          if (cpError) throw cpError;
+        }
+      } else {
+        // Clear coupon products if applies_to_all
+        await client.from('coupon_products').delete().eq('coupon_id', couponId);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['coupon-products'] });
       toast.success(editCoupon ? 'تم تحديث الكوبون' : 'تمت إضافة الكوبون');
       setDialogOpen(false);
       resetForm();
@@ -120,9 +180,11 @@ export default function AdminCoupons() {
       min_order_amount: '',
       max_uses: '',
       expires_at: '',
-      is_active: true
+      is_active: true,
+      applies_to_all: true
     });
     setEditCoupon(null);
+    setSelectedProductIds([]);
   };
 
   const openEdit = (coupon: Coupon) => {
@@ -134,7 +196,8 @@ export default function AdminCoupons() {
       min_order_amount: coupon.min_order_amount?.toString() || '',
       max_uses: coupon.max_uses?.toString() || '',
       expires_at: coupon.expires_at ? new Date(coupon.expires_at).toISOString().split('T')[0] : '',
-      is_active: coupon.is_active
+      is_active: coupon.is_active,
+      applies_to_all: coupon.applies_to_all ?? true
     });
     setDialogOpen(true);
   };
@@ -147,6 +210,14 @@ export default function AdminCoupons() {
   const isMaxUsesReached = (coupon: Coupon) => {
     if (!coupon.max_uses) return false;
     return coupon.used_count >= coupon.max_uses;
+  };
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProductIds(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   if (loading || supabaseLoading || roleLoading || !user || !hasRole) return null;
@@ -162,7 +233,7 @@ export default function AdminCoupons() {
             <DialogTrigger asChild>
               <Button className="gradient-primary text-primary-foreground"><Plus className="w-4 h-4 ml-2" /> إضافة كوبون</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editCoupon ? 'تعديل الكوبون' : 'إضافة كوبون جديد'}</DialogTitle></DialogHeader>
               <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(form); }} className="space-y-4">
                 <div>
@@ -236,7 +307,62 @@ export default function AdminCoupons() {
                   <Switch checked={form.is_active} onCheckedChange={v => setForm({...form, is_active: v})} />
                 </div>
 
-                <Button type="submit" disabled={saveMutation.isPending} className="w-full">
+                {/* Product Selection Section */}
+                <div className="border-t border-border pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      يطبق على جميع المنتجات
+                    </Label>
+                    <Switch 
+                      checked={form.applies_to_all} 
+                      onCheckedChange={v => setForm({...form, applies_to_all: v})} 
+                    />
+                  </div>
+
+                  {!form.applies_to_all && (
+                    <div className="space-y-2">
+                      <Label>اختر المنتجات ({selectedProductIds.length} منتج محدد)</Label>
+                      <ScrollArea className="h-48 border border-border rounded-lg p-2">
+                        <div className="space-y-2">
+                          {products?.map(product => (
+                            <div 
+                              key={product.id} 
+                              className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                                selectedProductIds.includes(product.id) 
+                                  ? 'bg-primary/10 border border-primary/30' 
+                                  : 'hover:bg-muted border border-transparent'
+                              }`}
+                              onClick={() => toggleProductSelection(product.id)}
+                            >
+                              <Checkbox 
+                                checked={selectedProductIds.includes(product.id)}
+                                onCheckedChange={() => toggleProductSelection(product.id)}
+                              />
+                              {product.image_url && (
+                                <img 
+                                  src={product.image_url} 
+                                  alt={product.name} 
+                                  className="w-10 h-10 object-cover rounded"
+                                />
+                              )}
+                              <span className="flex-1 truncate">{product.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      {!form.applies_to_all && selectedProductIds.length === 0 && (
+                        <p className="text-sm text-destructive">يرجى اختيار منتج واحد على الأقل</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={saveMutation.isPending || (!form.applies_to_all && selectedProductIds.length === 0)} 
+                  className="w-full"
+                >
                   {saveMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
                 </Button>
               </form>
@@ -304,6 +430,11 @@ export default function AdminCoupons() {
                         {expired && <span className="text-destructive text-xs">(منتهي)</span>}
                       </div>
                     )}
+
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Package className="w-3 h-3" />
+                      <span>{coupon.applies_to_all ? 'جميع المنتجات' : 'منتجات محددة'}</span>
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
