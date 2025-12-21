@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import * as React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Thumbs, FreeMode } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
@@ -16,9 +16,9 @@ interface ProductImageGalleryProps {
 }
 
 export function ProductImageGallery({ images, mainImage, productName }: ProductImageGalleryProps) {
-  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [thumbsSwiper, setThumbsSwiper] = React.useState<SwiperType | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState(0);
   
   // Combine main image with additional images
   const allImages = mainImage ? [mainImage, ...images.filter(img => img !== mainImage)] : images;

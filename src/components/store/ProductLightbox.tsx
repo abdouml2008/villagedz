@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductLightboxProps {
   images: string[];
@@ -20,12 +19,12 @@ export function ProductLightbox({
   onNavigate,
   productName = 'المنتج'
 }: ProductLightboxProps) {
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
 
   const minSwipeDistance = 50;
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       
@@ -79,9 +78,9 @@ export function ProductLightbox({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95 border-none">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 bg-black/95 border-none [&>button]:hidden">
         <div 
-          className="relative w-full h-full flex items-center justify-center"
+          className="relative w-full h-full flex items-center justify-center min-h-[50vh]"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -123,19 +122,13 @@ export function ProductLightbox({
           )}
 
           {/* Main image */}
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={currentIndex}
-              src={images[currentIndex]}
-              alt={`${productName} - ${currentIndex + 1}`}
-              className="max-w-full max-h-[85vh] object-contain select-none"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              draggable={false}
-            />
-          </AnimatePresence>
+          <img
+            key={currentIndex}
+            src={images[currentIndex]}
+            alt={`${productName} - ${currentIndex + 1}`}
+            className="max-w-full max-h-[85vh] object-contain select-none animate-fade-in"
+            draggable={false}
+          />
         </div>
       </DialogContent>
     </Dialog>
