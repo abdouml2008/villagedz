@@ -15,9 +15,11 @@ export const ar = {
     all: 'الكل',
     product: 'منتج',
     products: 'منتجات',
-    outOfStock: 'غير متوفر',
+    outOfStock: 'نفذ',
     inStock: 'متوفر',
     available: 'متاح',
+    loadMore: 'تحميل المزيد',
+    viewAll: 'عرض الكل',
   },
 
   // Header
@@ -69,6 +71,16 @@ export const ar = {
     // CTA
     haveCoupon: 'هل لديك كوبون خصم؟',
     couponDescription: 'استخدم كود الخصم عند إتمام الطلب واحصل على تخفيضات حصرية',
+    // New sections
+    specialOffers: 'عروض خاصة',
+    discountedProducts: 'منتجات بأسعار مخفضة',
+    bestSellers: 'الأكثر مبيعاً',
+    topProducts: 'المنتجات الأكثر طلباً',
+    allProducts: 'جميع المنتجات',
+    exploreAll: 'تصفح كل منتجاتنا',
+    newBadge: 'جديد',
+    customerReviews: 'آراء العملاء',
+    whatCustomersSay: 'ماذا يقول عملاؤنا عنا',
   },
 
   // Product
