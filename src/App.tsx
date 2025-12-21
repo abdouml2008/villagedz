@@ -27,6 +27,7 @@ const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
 const AdminCoupons = lazy(() => import("./pages/admin/Coupons"));
 const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
+const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const OrdersByStatus = lazy(() => import("./pages/admin/OrdersByStatus"));
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => {
                       <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
                       <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
                       <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
+                      <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
                     </Routes>
                   </Suspense>
                 </BrowserRouter>
