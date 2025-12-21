@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Thumbs, FreeMode } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
+import { ZoomIn } from 'lucide-react';
+import { ProductLightbox } from './ProductLightbox';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/thumbs';
@@ -15,9 +17,16 @@ interface ProductImageGalleryProps {
 
 export function ProductImageGallery({ images, mainImage, productName }: ProductImageGalleryProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   // Combine main image with additional images
   const allImages = mainImage ? [mainImage, ...images.filter(img => img !== mainImage)] : images;
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
   
   if (allImages.length === 0) {
     return (
@@ -29,9 +38,25 @@ export function ProductImageGallery({ images, mainImage, productName }: ProductI
 
   if (allImages.length === 1) {
     return (
-      <div className="bg-card rounded-2xl overflow-hidden shadow-village-md">
-        <img src={allImages[0]} alt={productName} className="w-full aspect-square object-cover" />
-      </div>
+      <>
+        <div 
+          className="bg-card rounded-2xl overflow-hidden shadow-village-md cursor-zoom-in group relative"
+          onClick={() => openLightbox(0)}
+        >
+          <img src={allImages[0]} alt={productName} className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <ZoomIn className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+        <ProductLightbox
+          images={allImages}
+          currentIndex={lightboxIndex}
+          isOpen={isLightboxOpen}
+          onClose={() => setIsLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
+          productName={productName}
+        />
+      </>
     );
   }
 
@@ -45,7 +70,15 @@ export function ProductImageGallery({ images, mainImage, productName }: ProductI
       >
         {allImages.map((image, index) => (
           <SwiperSlide key={index}>
-            <img src={image} alt={`${productName} - ${index + 1}`} className="w-full aspect-square object-cover" />
+            <div 
+              className="cursor-zoom-in group relative"
+              onClick={() => openLightbox(index)}
+            >
+              <img src={image} alt={`${productName} - ${index + 1}`} className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <ZoomIn className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
@@ -67,6 +100,15 @@ export function ProductImageGallery({ images, mainImage, productName }: ProductI
           </SwiperSlide>
         ))}
       </Swiper>
+
+      <ProductLightbox
+        images={allImages}
+        currentIndex={lightboxIndex}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        onNavigate={setLightboxIndex}
+        productName={productName}
+      />
     </div>
   );
 }
