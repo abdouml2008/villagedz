@@ -32,7 +32,8 @@ export default function Home() {
   // Parallax effect for hero background
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.3]);
+  const contentY = useTransform(scrollY, [0, 500], [0, -50]);
+  const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -161,7 +162,7 @@ export default function Home() {
         {/* Content */}
         <motion.div 
           className="container mx-auto text-center relative z-10 px-4 py-24"
-          style={{ opacity: heroOpacity }}
+          style={{ y: contentY, scale }}
         >
           <motion.h1 
             className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
