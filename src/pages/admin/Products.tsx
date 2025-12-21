@@ -29,6 +29,12 @@ export default function AdminProducts() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Additional images state
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
+  const additionalImagesInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -94,6 +100,49 @@ export default function AdminProducts() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleAdditionalFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024;
+    const maxImages = 10;
+    
+    const currentCount = additionalImages.length + additionalImageFiles.length;
+    if (currentCount + files.length > maxImages) {
+      toast.error(`الحد الأقصى للصور هو ${maxImages} صور`);
+      return;
+    }
+    
+    const validFiles: File[] = [];
+    const previews: string[] = [];
+    
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name}: نوع الملف غير مدعوم`);
+        continue;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: حجم الصورة يجب أن يكون أقل من 5 ميجابايت`);
+        continue;
+      }
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
+    }
+    
+    setAdditionalImageFiles(prev => [...prev, ...validFiles]);
+    setAdditionalImagePreviews(prev => [...prev, ...previews]);
+    if (additionalImagesInputRef.current) additionalImagesInputRef.current.value = '';
+  };
+
+  const removeAdditionalImage = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      setAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const adjustedIndex = index - additionalImages.length;
+      setAdditionalImageFiles(prev => prev.filter((_, i) => i !== adjustedIndex));
+      setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== adjustedIndex));
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async (data: typeof form) => {
       setUploading(true);
@@ -104,12 +153,20 @@ export default function AdminProducts() {
         imageUrl = await uploadImage(imageFile);
       }
       
+      // Upload additional images
+      const uploadedAdditionalImages: string[] = [...additionalImages];
+      for (const file of additionalImageFiles) {
+        const url = await uploadImage(file);
+        uploadedAdditionalImages.push(url);
+      }
+      
       const productData = {
         name: data.name,
         description: data.description || null,
         price: parseFloat(data.price),
         category_id: data.category_id || null,
         image_url: imageUrl || null,
+        images: uploadedAdditionalImages,
         sizes: data.sizes ? data.sizes.split(',').map(s => s.trim()) : [],
         colors: data.colors ? data.colors.split(',').map(c => c.trim()) : [],
         min_quantity: data.min_quantity ? parseInt(data.min_quantity) : 1,
@@ -161,7 +218,11 @@ export default function AdminProducts() {
     setEditProduct(null);
     setImageFile(null);
     setImagePreview(null);
+    setAdditionalImages([]);
+    setAdditionalImageFiles([]);
+    setAdditionalImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (additionalImagesInputRef.current) additionalImagesInputRef.current.value = '';
   };
 
   const openEdit = (product: Product) => {
@@ -182,7 +243,11 @@ export default function AdminProducts() {
     });
     setImageFile(null);
     setImagePreview(null);
+    setAdditionalImages(product.images || []);
+    setAdditionalImageFiles([]);
+    setAdditionalImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (additionalImagesInputRef.current) additionalImagesInputRef.current.value = '';
     setDialogOpen(true);
   };
 
@@ -256,6 +321,61 @@ export default function AdminProducts() {
                       onChange={e => { setForm({...form, image_url: e.target.value}); clearImage(); }} 
                       placeholder="https://... رابط الصورة"
                     />
+                  </div>
+                </div>
+
+                {/* Additional Images Section */}
+                <div>
+                  <Label>صور إضافية (حتى 10 صور)</Label>
+                  <p className="text-xs text-muted-foreground mb-2">أضف صوراً متعددة ليتمكن الزبون من رؤية المنتج من زوايا مختلفة</p>
+                  <div className="mt-2 space-y-3">
+                    {(additionalImages.length > 0 || additionalImagePreviews.length > 0) && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {additionalImages.map((url, index) => (
+                          <div key={`existing-${index}`} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+                            <img src={url} alt={`صورة ${index + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeAdditionalImage(index, true)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                        {additionalImagePreviews.map((url, index) => (
+                          <div key={`new-${index}`} className="relative aspect-square rounded-lg overflow-hidden border border-primary border-dashed">
+                            <img src={url} alt={`صورة جديدة ${index + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeAdditionalImage(additionalImages.length + index, false)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <span className="absolute bottom-1 left-1 bg-primary text-primary-foreground text-xs px-1 rounded">جديد</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      ref={additionalImagesInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleAdditionalFilesChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => additionalImagesInputRef.current?.click()}
+                      disabled={additionalImages.length + additionalImageFiles.length >= 10}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 ml-2" />
+                      إضافة صور ({additionalImages.length + additionalImageFiles.length}/10)
+                    </Button>
                   </div>
                 </div>
 
