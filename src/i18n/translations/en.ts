@@ -15,9 +15,11 @@ export const en = {
     all: 'All',
     product: 'product',
     products: 'products',
-    outOfStock: 'Out of stock',
+    outOfStock: 'Sold',
     inStock: 'In stock',
     available: 'available',
+    loadMore: 'Load More',
+    viewAll: 'View All',
   },
 
   // Header
@@ -69,6 +71,16 @@ export const en = {
     // CTA
     haveCoupon: 'Have a discount coupon?',
     couponDescription: 'Use your discount code at checkout and get exclusive discounts',
+    // New sections
+    specialOffers: 'Special Offers',
+    discountedProducts: 'Discounted products',
+    bestSellers: 'Best Sellers',
+    topProducts: 'Most popular products',
+    allProducts: 'All Products',
+    exploreAll: 'Explore all our products',
+    newBadge: 'New',
+    customerReviews: 'Customer Reviews',
+    whatCustomersSay: 'What our customers say about us',
   },
 
   // Product

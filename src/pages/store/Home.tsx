@@ -1,18 +1,28 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { PromoBanner } from '@/components/store/PromoBanner';
+import { CustomerTestimonials } from '@/components/store/CustomerTestimonials';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Flame, Sparkles, Package, Loader2 } from 'lucide-react';
 import { Product, Category } from '@/types/store';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+
+const PRODUCTS_PER_PAGE = 8;
 
 export default function Home() {
   const { language, isRTL } = useLanguage();
   const { t } = useTranslation();
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+  const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -26,7 +36,8 @@ export default function Home() {
     refetchOnWindowFocus: true,
   });
 
-  const { data: products, isLoading: productsLoading } = useQuery({
+  // Featured/Latest Products (8 items)
+  const { data: featuredProducts, isLoading: featuredLoading } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
       const client = await getSupabase();
@@ -34,7 +45,40 @@ export default function Home() {
         .from('products')
         .select('*')
         .eq('is_active', true)
+        .order('created_at', { ascending: false })
         .limit(8);
+      if (error) throw error;
+      return data as Product[];
+    }
+  });
+
+  // Discounted Products (Special Offers)
+  const { data: discountedProducts } = useQuery({
+    queryKey: ['discounted-products'],
+    queryFn: async () => {
+      const client = await getSupabase();
+      const { data, error } = await client
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .gt('discount_percentage', 0)
+        .order('discount_percentage', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data as Product[];
+    }
+  });
+
+  // All Products with pagination
+  const { data: allProducts, isLoading: allProductsLoading } = useQuery({
+    queryKey: ['all-products'],
+    queryFn: async () => {
+      const client = await getSupabase();
+      const { data, error } = await client
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Product[];
     }
@@ -53,7 +97,12 @@ export default function Home() {
     }
   });
 
-  const isLoading = categoriesLoading && productsLoading;
+  const handleLoadMore = () => {
+    setVisibleProducts(prev => prev + PRODUCTS_PER_PAGE);
+  };
+
+  const displayedProducts = allProducts?.slice(0, visibleProducts) || [];
+  const hasMoreProducts = allProducts && visibleProducts < allProducts.length;
 
   return (
     <StoreLayout>
@@ -153,6 +202,42 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Special Offers Section */}
+      {discountedProducts && discountedProducts.length > 0 && (
+        <section className="py-20 px-4 relative bg-destructive/5">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Flame className="w-8 h-8 text-destructive animate-pulse" />
+              <h2 className="text-3xl md:text-4xl font-bold">{t.home.specialOffers}</h2>
+              <Flame className="w-8 h-8 text-destructive animate-pulse" />
+            </div>
+            <p className="text-center text-muted-foreground mb-12">{t.home.discountedProducts}</p>
+            
+            <Swiper
+              modules={[Autoplay, Navigation]}
+              spaceBetween={16}
+              slidesPerView={1.2}
+              centeredSlides={false}
+              navigation
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              breakpoints={{
+                640: { slidesPerView: 2.2 },
+                768: { slidesPerView: 3.2 },
+                1024: { slidesPerView: 4.2 },
+              }}
+              className="pb-4"
+              dir={isRTL ? 'rtl' : 'ltr'}
+            >
+              {discountedProducts.map(product => (
+                <SwiperSlide key={product.id}>
+                  <ProductCard product={product} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </section>
+      )}
+
       {/* Featured Products */}
       <section className="py-20 px-4 relative bg-secondary/30">
         {/* Background Pattern */}
@@ -161,19 +246,21 @@ export default function Home() {
         }} />
         
         <div className="container mx-auto relative">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.latestProducts}</h2>
-            <p className="text-muted-foreground">{t.home.discoverLatest}</p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Sparkles className="w-7 h-7 text-accent" />
+            <h2 className="text-3xl md:text-4xl font-bold">{t.home.latestProducts}</h2>
           </div>
-          {productsLoading ? (
+          <p className="text-center text-muted-foreground mb-12">{t.home.discoverLatest}</p>
+          
+          {featuredLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
               ))}
             </div>
-          ) : products && products.length > 0 ? (
+          ) : featuredProducts && featuredProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {products.map(product => (
+              {featuredProducts.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -189,8 +276,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Customer Testimonials */}
+      <CustomerTestimonials />
+
+      {/* All Products Section */}
       <section className="py-20 px-4 relative">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Package className="w-7 h-7 text-primary" />
+            <h2 className="text-3xl md:text-4xl font-bold">{t.home.allProducts}</h2>
+          </div>
+          <p className="text-center text-muted-foreground mb-12">{t.home.exploreAll}</p>
+          
+          {allProductsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
+              ))}
+            </div>
+          ) : displayedProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {displayedProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              
+              {/* Load More Button */}
+              {hasMoreProducts && (
+                <div className="flex justify-center mt-12">
+                  <Button
+                    onClick={handleLoadMore}
+                    variant="outline"
+                    size="lg"
+                    className="px-8 gap-2"
+                  >
+                    <Loader2 className="w-4 h-4 hidden" />
+                    {t.common.loadMore}
+                    <span className="text-muted-foreground text-sm">
+                      ({visibleProducts}/{allProducts?.length})
+                    </span>
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-border">
+              <p className="text-xl">{t.home.noProducts}</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 px-4 relative bg-secondary/20">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
