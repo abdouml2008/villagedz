@@ -7,6 +7,8 @@ import { PromoBanner } from '@/components/store/PromoBanner';
 import { CustomerTestimonials } from '@/components/store/CustomerTestimonials';
 import { FloatingParticles } from '@/components/store/FloatingParticles';
 import { ScrollProgressIndicator } from '@/components/store/ScrollProgressIndicator';
+import { ProductShowcaseCarousel } from '@/components/store/ProductShowcaseCarousel';
+import { AnimatedStats } from '@/components/store/AnimatedStats';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Flame, Sparkles, Package, Loader2 } from 'lucide-react';
 import { Product, Category } from '@/types/store';
@@ -200,25 +202,21 @@ export default function Home() {
             </Link>
           </motion.div>
           
-          {/* Stats */}
+          {/* Product Showcase & Stats */}
           <motion.div 
-            className="flex flex-wrap justify-center gap-8 md:gap-12 mt-20"
+            className="mt-16 md:mt-20 max-w-5xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
           >
-            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
-              <span className="text-4xl md:text-5xl font-bold text-gradient">69</span>
-              <p className="text-sm text-muted-foreground mt-2">{t.home.deliveryStates}</p>
+            {/* Product Carousel */}
+            <div className="mb-8">
+              <p className="text-center text-sm text-muted-foreground mb-4">منتجاتنا المميزة</p>
+              <ProductShowcaseCarousel />
             </div>
-            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
-              <span className="text-4xl md:text-5xl font-bold text-gradient">{totalProducts || 0}</span>
-              <p className="text-sm text-muted-foreground mt-2">{t.home.productsAvailable}</p>
-            </div>
-            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
-              <span className="text-4xl md:text-5xl font-bold text-gradient">24/7</span>
-              <p className="text-sm text-muted-foreground mt-2">{t.home.customerSupport}</p>
-            </div>
+            
+            {/* Animated Stats */}
+            <AnimatedStats totalProducts={totalProducts || 0} />
           </motion.div>
         </motion.div>
         
