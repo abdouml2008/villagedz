@@ -1,0 +1,205 @@
+export const en = {
+  // Common
+  common: {
+    loading: 'Loading...',
+    noImage: 'No image',
+    add: 'Add',
+    remove: 'Remove',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    save: 'Save',
+    close: 'Close',
+    search: 'Search',
+    apply: 'Apply',
+    currency: 'DZD',
+    all: 'All',
+    product: 'product',
+    products: 'products',
+    outOfStock: 'Out of stock',
+    inStock: 'In stock',
+    available: 'available',
+  },
+
+  // Header
+  header: {
+    search: 'Search',
+    adminPanel: 'Admin Panel',
+    login: 'Login',
+  },
+
+  // Footer
+  footer: {
+    storeName: 'Village',
+    storeTagline: 'Village Store',
+    storeDescription: 'Your favorite online shopping store in Algeria',
+    categories: 'Categories',
+    customerService: 'Customer Service',
+    cart: 'Shopping Cart',
+    payOnDelivery: 'Cash on Delivery',
+    qualityGuarantee: 'Quality Guarantee',
+    contactUs: 'Contact Us',
+    location: 'Algeria',
+    allRightsReserved: 'All rights reserved',
+  },
+
+  // Home Page
+  home: {
+    welcome: 'Welcome to',
+    heroDescription: 'Discover the latest models and best prices with delivery to all Algerian states',
+    shopNow: 'Shop Now',
+    browseCollection: 'Browse Collection',
+    deliveryStates: 'Delivery States',
+    productsAvailable: 'Products Available',
+    customerSupport: 'Customer Support',
+    shopByCategory: 'Shop by Category',
+    chooseFromCollection: 'Choose from our diverse collection',
+    noCategories: 'No categories',
+    latestProducts: 'Latest Products',
+    discoverLatest: 'Discover what just arrived',
+    noProducts: 'No products currently',
+    addFromDashboard: 'Add products from the dashboard',
+    goToDashboard: 'Go to Dashboard →',
+    // Features
+    deliveryTitle: 'Delivery to All States',
+    deliveryDescription: 'We deliver to 58 Algerian states at reasonable prices',
+    paymentTitle: 'Cash on Delivery',
+    paymentDescription: 'Pay when you receive your order safely',
+    qualityTitle: 'Guaranteed Quality',
+    qualityDescription: 'Original products with high quality and warranty',
+    // CTA
+    haveCoupon: 'Have a discount coupon?',
+    couponDescription: 'Use your discount code at checkout and get exclusive discounts',
+  },
+
+  // Product
+  product: {
+    notFound: 'Product not found',
+    noImageAvailable: 'No image available',
+    size: 'Size',
+    color: 'Color',
+    quantity: 'Quantity',
+    minQuantity: 'Minimum',
+    maxQuantity: 'Maximum',
+    stock: 'Available',
+    pieces: 'pieces',
+    addToCart: 'Add to Cart',
+    orderNow: 'Order Now',
+    buyDiscount: 'Buy {quantity} or more and get {percentage}% off',
+  },
+
+  // Cart
+  cart: {
+    title: 'Shopping Cart',
+    empty: 'Your cart is empty',
+    addProducts: 'Add some products to start shopping',
+    browseProducts: 'Browse Products',
+    orderSummary: 'Order Summary',
+    subtotal: 'Subtotal',
+    discount: 'Discount',
+    delivery: 'Delivery',
+    toBeDetemined: 'To be determined',
+    total: 'Total',
+    checkout: 'Checkout',
+  },
+
+  // Checkout
+  checkout: {
+    title: 'Checkout',
+    deliveryInfo: 'Delivery Information',
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    phone: 'Phone Number',
+    phonePlaceholder: '05XXXXXXXX',
+    wilaya: 'Wilaya',
+    selectWilaya: 'Select Wilaya',
+    deliveryType: 'Delivery Type',
+    officeDelivery: 'Office Delivery',
+    homeDelivery: 'Home Delivery',
+    orderSummary: 'Order Summary',
+    couponCode: 'Coupon Code',
+    enterCode: 'Enter code here',
+    quantityDiscount: 'Quantity Discount',
+    couponDiscount: 'Coupon Discount',
+    products: 'Products',
+    confirmOrder: 'Confirm Order',
+    submitting: 'Submitting...',
+    // Validation messages
+    nameMinLength: 'Name must be at least 2 characters',
+    nameMaxLength: 'Name must not exceed 50 characters',
+    nameLettersOnly: 'Name must contain letters only',
+    phoneFormat: 'Phone must be in format 05XXXXXXXX, 06XXXXXXXX, or 07XXXXXXXX',
+    selectWilayaError: 'Please select a wilaya',
+    emptyCart: 'Cart is empty',
+    enterCoupon: 'Please enter a coupon code',
+    invalidCoupon: 'Invalid coupon code',
+    couponApplied: 'Coupon applied successfully!',
+    couponError: 'Error validating coupon',
+    couponRemoved: 'Coupon removed',
+    orderSuccess: 'Your order has been submitted successfully!',
+    orderError: 'Error submitting order',
+    quantityUnavailable: 'Requested quantity of "{name}" is not available. Available: {available}',
+  },
+
+  // Search
+  search: {
+    title: 'Search Products',
+    placeholder: 'Search for a product...',
+    searching: 'Searching...',
+    noResults: 'No results for',
+    typeToSearch: 'Type to search for products',
+  },
+
+  // Track Order
+  trackOrder: {
+    title: 'Track Your Order',
+    description: 'Enter your phone number to view your order status',
+    phonePlaceholder: 'Phone number (e.g. 0555123456)',
+    noOrders: 'No orders found',
+    noOrdersDescription: "We couldn't find any orders linked to this number",
+    yourOrders: 'Your Orders',
+    deliveryTo: 'Delivery to',
+    toHome: 'Home',
+    toOffice: 'Office',
+    notSpecified: 'Not specified',
+    searchError: 'Error occurred while searching. Please try again.',
+    // Status
+    statusPending: 'Pending Review',
+    statusConfirmed: 'Confirmed',
+    statusShipped: 'Shipped',
+    statusDelivered: 'Delivered',
+    statusCancelled: 'Cancelled',
+  },
+
+  // Category
+  category: {
+    noProductsMatch: 'No products match the selected filters',
+  },
+
+  // Filters
+  filters: {
+    minPrice: 'Min Price',
+    maxPrice: 'Max Price',
+    inStockOnly: 'In Stock Only',
+    sortBy: 'Sort By',
+    newest: 'Newest',
+    priceAsc: 'Price: Low to High',
+    priceDesc: 'Price: High to Low',
+    name: 'Name',
+    productsCount: 'products',
+  },
+
+  // Reviews
+  reviews: {
+    title: 'Reviews',
+    writeReview: 'Write Your Review',
+    yourName: 'Your Name',
+    yourPhone: 'Your Phone',
+    rating: 'Rating',
+    comment: 'Your Comment (optional)',
+    submit: 'Submit Review',
+    submitting: 'Submitting...',
+    noReviews: 'No reviews yet. Be the first to review this product!',
+    thankYou: 'Thank you for your review! It will be reviewed and published soon.',
+    error: 'An error occurred. Please try again.',
+  },
+};

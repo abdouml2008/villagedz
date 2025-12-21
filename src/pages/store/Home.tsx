@@ -4,10 +4,16 @@ import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { PromoBanner } from '@/components/store/PromoBanner';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Product, Category } from '@/types/store';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Home() {
+  const { language, isRTL } = useLanguage();
+  const { t } = useTranslation();
+  const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -68,24 +74,24 @@ export default function Home() {
         
         <div className="container mx-auto text-center relative">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-            مرحباً بكم في <span className="text-gradient">Village</span>
+            {t.home.welcome} <span className="text-gradient">Village</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            اكتشفوا أحدث الموديلات وأفضل الأسعار مع توصيل لجميع ولايات الجزائر
+            {t.home.heroDescription}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <Link 
               to="/category/men" 
               className="inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-0.5"
             >
-              تسوق الآن
-              <ArrowLeft className="w-5 h-5" />
+              {t.home.shopNow}
+              <ArrowIcon className="w-5 h-5" />
             </Link>
             <Link 
               to="/category/women" 
               className="inline-flex items-center justify-center gap-2 bg-card text-foreground px-8 py-4 rounded-xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-0.5"
             >
-              تصفح التشكيلة
+              {t.home.browseCollection}
             </Link>
           </div>
           
@@ -93,17 +99,17 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-8 mt-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="text-center">
               <span className="text-3xl md:text-4xl font-bold text-gradient">69</span>
-              <p className="text-sm text-muted-foreground mt-1">ولاية توصيل</p>
+              <p className="text-sm text-muted-foreground mt-1">{t.home.deliveryStates}</p>
             </div>
             <div className="w-px h-12 bg-border hidden sm:block" />
             <div className="text-center">
               <span className="text-3xl md:text-4xl font-bold text-gradient">{totalProducts || 0}</span>
-              <p className="text-sm text-muted-foreground mt-1">منتج متاح</p>
+              <p className="text-sm text-muted-foreground mt-1">{t.home.productsAvailable}</p>
             </div>
             <div className="w-px h-12 bg-border hidden sm:block" />
             <div className="text-center">
               <span className="text-3xl md:text-4xl font-bold text-gradient">24/7</span>
-              <p className="text-sm text-muted-foreground mt-1">دعم العملاء</p>
+              <p className="text-sm text-muted-foreground mt-1">{t.home.customerSupport}</p>
             </div>
           </div>
         </div>
@@ -113,8 +119,8 @@ export default function Home() {
       <section className="py-20 px-4 relative">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">تسوق حسب القسم</h2>
-            <p className="text-muted-foreground">اختر من بين تشكيلتنا المتنوعة</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.shopByCategory}</h2>
+            <p className="text-muted-foreground">{t.home.chooseFromCollection}</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {categoriesLoading ? (
@@ -133,12 +139,14 @@ export default function Home() {
                   <div className="absolute inset-0 gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
                   
                   <span className="text-5xl md:text-6xl mb-4 block group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
-                  <h3 className="text-lg md:text-xl font-semibold group-hover:text-primary transition-colors">{category.name_ar}</h3>
+                  <h3 className="text-lg md:text-xl font-semibold group-hover:text-primary transition-colors">
+                    {language === 'ar' ? category.name_ar : category.name}
+                  </h3>
                 </Link>
               ))
             ) : (
               <div className="col-span-4 text-center py-8 text-muted-foreground">
-                لا توجد أقسام
+                {t.home.noCategories}
               </div>
             )}
           </div>
@@ -154,8 +162,8 @@ export default function Home() {
         
         <div className="container mx-auto relative">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">أحدث المنتجات</h2>
-            <p className="text-muted-foreground">اكتشف آخر ما وصلنا</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.latestProducts}</h2>
+            <p className="text-muted-foreground">{t.home.discoverLatest}</p>
           </div>
           {productsLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -171,10 +179,10 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-border">
-              <p className="text-xl mb-2">لا توجد منتجات حالياً</p>
-              <p>قم بإضافة منتجات من لوحة التحكم</p>
+              <p className="text-xl mb-2">{t.home.noProducts}</p>
+              <p>{t.home.addFromDashboard}</p>
               <Link to="/admin" className="mt-4 inline-block text-primary hover:underline">
-                الذهاب للوحة التحكم →
+                {t.home.goToDashboard}
               </Link>
             </div>
           )}
@@ -189,22 +197,22 @@ export default function Home() {
               <div className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">🚚</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">توصيل لكل الولايات</h3>
-              <p className="text-muted-foreground text-sm">نوصل لـ 58 ولاية جزائرية بأسعار مناسبة</p>
+              <h3 className="text-xl font-semibold mb-3">{t.home.deliveryTitle}</h3>
+              <p className="text-muted-foreground text-sm">{t.home.deliveryDescription}</p>
             </div>
             <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
               <div className="w-20 h-20 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">💳</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">الدفع عند الاستلام</h3>
-              <p className="text-muted-foreground text-sm">ادفع عند استلام طلبك براحة وأمان</p>
+              <h3 className="text-xl font-semibold mb-3">{t.home.paymentTitle}</h3>
+              <p className="text-muted-foreground text-sm">{t.home.paymentDescription}</p>
             </div>
             <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
               <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">⭐</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">جودة مضمونة</h3>
-              <p className="text-muted-foreground text-sm">منتجات أصلية بجودة عالية مع ضمان</p>
+              <h3 className="text-xl font-semibold mb-3">{t.home.qualityTitle}</h3>
+              <p className="text-muted-foreground text-sm">{t.home.qualityDescription}</p>
             </div>
           </div>
         </div>
@@ -220,17 +228,17 @@ export default function Home() {
             
             <div className="relative">
               <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground mb-4">
-                هل لديك كوبون خصم؟
+                {t.home.haveCoupon}
               </h2>
               <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-                استخدم كود الخصم عند إتمام الطلب واحصل على تخفيضات حصرية
+                {t.home.couponDescription}
               </p>
               <Link 
                 to="/cart"
                 className="inline-flex items-center gap-2 bg-white text-primary px-8 py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors"
               >
-                تسوق الآن
-                <ArrowLeft className="w-5 h-5" />
+                {t.home.shopNow}
+                <ArrowIcon className="w-5 h-5" />
               </Link>
             </div>
           </div>

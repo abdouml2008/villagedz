@@ -9,6 +9,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { SearchDialog } from './SearchDialog';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +19,7 @@ export function StoreHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { hasRole } = useHasAnyRole();
   const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const { data: categories = [] } = useQuery({
     queryKey: ['header-categories'],
@@ -55,7 +57,7 @@ export function StoreHeader() {
                 size="icon" 
                 className="rounded-full hover:bg-secondary"
                 onClick={() => setSearchOpen(true)}
-                title="البحث"
+                title={t.header.search}
               >
                 <Search className="w-5 h-5" />
               </Button>
@@ -64,7 +66,7 @@ export function StoreHeader() {
               <Link 
                 to={hasRole ? "/admin/dashboard" : "/admin"} 
                 className="p-2 hover:bg-secondary rounded-full transition-colors"
-                title={hasRole ? "لوحة التحكم" : "تسجيل الدخول"}
+                title={hasRole ? t.header.adminPanel : t.header.login}
               >
                 {hasRole ? <Settings className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
               </Link>
@@ -100,7 +102,7 @@ export function StoreHeader() {
               onClick={() => setMenuOpen(false)}
             >
               {hasRole ? <Settings className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-              {hasRole ? "لوحة التحكم" : "تسجيل الدخول"}
+              {hasRole ? t.header.adminPanel : t.header.login}
             </Link>
           </nav>
         )}
