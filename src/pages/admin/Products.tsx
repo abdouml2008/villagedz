@@ -35,6 +35,10 @@ export default function AdminProducts() {
   const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
   const additionalImagesInputRef = useRef<HTMLInputElement>(null);
+  
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMainDragging, setIsMainDragging] = useState(false);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -102,6 +106,67 @@ export default function AdminProducts() {
 
   const handleAdditionalFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    processAdditionalFiles(files);
+    if (additionalImagesInputRef.current) additionalImagesInputRef.current.value = '';
+  };
+
+  // Drag and drop handlers for additional images
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    processAdditionalFiles(files);
+  };
+
+  // Drag and drop handlers for main image
+  const handleMainDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMainDragging(true);
+  };
+
+  const handleMainDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMainDragging(false);
+  };
+
+  const handleMainDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMainDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('نوع الملف غير مدعوم. يرجى رفع صورة (JPEG, PNG, WebP, GIF)');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const processAdditionalFiles = (files: File[]) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const maxSize = 5 * 1024 * 1024;
     const maxImages = 10;
@@ -130,7 +195,6 @@ export default function AdminProducts() {
     
     setAdditionalImageFiles(prev => [...prev, ...validFiles]);
     setAdditionalImagePreviews(prev => [...prev, ...previews]);
-    if (additionalImagesInputRef.current) additionalImagesInputRef.current.value = '';
   };
 
   const removeAdditionalImage = (index: number, isExisting: boolean) => {
@@ -277,11 +341,11 @@ export default function AdminProducts() {
                   </Select>
                 </div>
                 
-                {/* Image Upload Section */}
+                {/* Image Upload Section with Drag & Drop */}
                 <div>
-                  <Label>صورة المنتج</Label>
+                  <Label>صورة المنتج الرئيسية</Label>
                   <div className="mt-2 space-y-3">
-                    {(imagePreview || form.image_url) && (
+                    {(imagePreview || form.image_url) ? (
                       <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border">
                         <img 
                           src={imagePreview || form.image_url} 
@@ -296,26 +360,35 @@ export default function AdminProducts() {
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                    )}
-                    <div className="flex gap-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
+                    ) : (
+                      <div
+                        onDragOver={handleMainDragOver}
+                        onDragLeave={handleMainDragLeave}
+                        onDrop={handleMainDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1"
+                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                          isMainDragging 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-muted-foreground/30 hover:border-primary hover:bg-primary/5'
+                        }`}
                       >
-                        <Upload className="w-4 h-4 ml-2" />
-                        رفع صورة
-                      </Button>
-                    </div>
-                    <div className="text-center text-xs text-muted-foreground">أو</div>
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          اسحب وأفلت الصورة هنا
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          أو اضغط للاختيار
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <div className="text-center text-xs text-muted-foreground">أو أدخل رابط الصورة</div>
                     <Input 
                       value={form.image_url} 
                       onChange={e => { setForm({...form, image_url: e.target.value}); clearImage(); }} 
@@ -324,11 +397,33 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
-                {/* Additional Images Section */}
+                {/* Additional Images Section with Drag & Drop */}
                 <div>
                   <Label>صور إضافية (حتى 10 صور)</Label>
                   <p className="text-xs text-muted-foreground mb-2">أضف صوراً متعددة ليتمكن الزبون من رؤية المنتج من زوايا مختلفة</p>
                   <div className="mt-2 space-y-3">
+                    {/* Drag and Drop Zone */}
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => additionalImagesInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                        isDragging 
+                          ? 'border-primary bg-primary/10' 
+                          : 'border-muted-foreground/30 hover:border-primary hover:bg-primary/5'
+                      } ${additionalImages.length + additionalImageFiles.length >= 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        اسحب وأفلت الصور هنا
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ({additionalImages.length + additionalImageFiles.length}/10)
+                      </p>
+                    </div>
+                    
+                    {/* Images Grid */}
                     {(additionalImages.length > 0 || additionalImagePreviews.length > 0) && (
                       <div className="grid grid-cols-4 gap-2">
                         {additionalImages.map((url, index) => (
@@ -336,7 +431,7 @@ export default function AdminProducts() {
                             <img src={url} alt={`صورة ${index + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
-                              onClick={() => removeAdditionalImage(index, true)}
+                              onClick={(e) => { e.stopPropagation(); removeAdditionalImage(index, true); }}
                               className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
                             >
                               <X className="w-3 h-3" />
@@ -348,7 +443,7 @@ export default function AdminProducts() {
                             <img src={url} alt={`صورة جديدة ${index + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
-                              onClick={() => removeAdditionalImage(additionalImages.length + index, false)}
+                              onClick={(e) => { e.stopPropagation(); removeAdditionalImage(additionalImages.length + index, false); }}
                               className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
                             >
                               <X className="w-3 h-3" />
@@ -366,16 +461,6 @@ export default function AdminProducts() {
                       onChange={handleAdditionalFilesChange}
                       className="hidden"
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => additionalImagesInputRef.current?.click()}
-                      disabled={additionalImages.length + additionalImageFiles.length >= 10}
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 ml-2" />
-                      إضافة صور ({additionalImages.length + additionalImageFiles.length}/10)
-                    </Button>
                   </div>
                 </div>
 
