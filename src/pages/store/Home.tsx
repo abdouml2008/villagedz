@@ -33,7 +33,6 @@ export default function Home() {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 600], [0, -150]);
   const bgScale = useTransform(scrollY, [0, 600], [1, 1.1]);
-  const contentOpacity = useTransform(scrollY, [0, 400], [1, 0.3]);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -161,119 +160,53 @@ export default function Home() {
         <div className="absolute bottom-1/4 left-1/4 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />
         
         {/* Content */}
-        <motion.div 
-          className="container mx-auto text-center relative z-10 px-4 py-24"
-          style={{ opacity: contentOpacity }}
-        >
-          {/* Animated Title with Reveal Effect */}
-          <motion.div className="overflow-hidden">
-            <motion.h1 
-              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <motion.span
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-              >
-                {t.home.welcome}{' '}
-              </motion.span>
-              <motion.span 
-                className="text-gradient drop-shadow-lg inline-block"
-                initial={{ opacity: 0, scale: 0.8, rotateX: 90 }}
-                animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-                transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              >
-                Village
-              </motion.span>
-            </motion.h1>
-          </motion.div>
+        <div className="container mx-auto text-center relative z-10 px-4 py-24">
+          {/* Title */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
+            {t.home.welcome}{' '}
+            <span className="text-gradient drop-shadow-lg inline-block">
+              Village
+            </span>
+          </h1>
           
-          <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-          >
+          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
             {t.home.heroDescription}
-          </motion.p>
+          </p>
           
-          {/* Staggered Buttons */}
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { 
-                opacity: 1,
-                transition: { staggerChildren: 0.15, delayChildren: 0.9 }
-              }
-            }}
-          >
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.9 },
-                visible: { opacity: 1, y: 0, scale: 1 }
-              }}
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              to="/category/men" 
+              className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
             >
-              <Link 
-                to="/category/men" 
-                className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
-              >
-                {t.home.shopNow}
-                <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </motion.div>
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 30, scale: 0.9 },
-                visible: { opacity: 1, y: 0, scale: 1 }
-              }}
+              {t.home.shopNow}
+              <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link 
+              to="/category/women" 
+              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
             >
-              <Link 
-                to="/category/women" 
-                className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
-              >
-                {t.home.browseCollection}
-              </Link>
-            </motion.div>
-          </motion.div>
+              {t.home.browseCollection}
+            </Link>
+          </div>
           
           {/* Product Showcase & Stats */}
-          <motion.div 
-            className="mt-16 md:mt-20 max-w-5xl mx-auto"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.2, ease: "easeOut" }}
-          >
+          <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
             {/* Product Carousel */}
             <div className="mb-8">
-              <motion.p 
-                className="text-center text-sm text-muted-foreground mb-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.4 }}
-              >
+              <p className="text-center text-sm text-muted-foreground mb-4">
                 منتجاتنا المميزة
-              </motion.p>
+              </p>
               <ProductShowcaseCarousel />
             </div>
             
             {/* Animated Stats */}
             <AnimatedStats totalProducts={totalProducts || 0} />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
         
-        {/* Enhanced Scroll Indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.5 }}
-        >
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -288,7 +221,7 @@ export default function Home() {
               />
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Categories */}
