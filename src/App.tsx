@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AdminRoute } from "@/components/auth/AdminRoute";
 import { lazy, Suspense } from "react";
 
@@ -40,39 +41,41 @@ const App = () => {
 
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <CartProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={<Loading />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/category/:slug" element={<Category />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/track-order" element={<TrackOrder />} />
-                    <Route path="/admin" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                    <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
-                    <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
-                    <Route path="/admin/orders/:status" element={<AdminRoute><OrdersByStatus /></AdminRoute>} />
-                    <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-                    <Route path="/admin/delivery-prices" element={<AdminRoute><AdminDeliveryPrices /></AdminRoute>} />
-                    <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
-                    <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
-                    <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
-                    <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </CartProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <CartProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Suspense fallback={<Loading />}>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/category/:slug" element={<Category />} />
+                      <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/track-order" element={<TrackOrder />} />
+                      <Route path="/admin" element={<AdminLogin />} />
+                      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                      <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+                      <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+                      <Route path="/admin/orders/:status" element={<AdminRoute><OrdersByStatus /></AdminRoute>} />
+                      <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+                      <Route path="/admin/delivery-prices" element={<AdminRoute><AdminDeliveryPrices /></AdminRoute>} />
+                      <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+                      <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
+                      <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
+                      <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+              </TooltipProvider>
+            </CartProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 };
