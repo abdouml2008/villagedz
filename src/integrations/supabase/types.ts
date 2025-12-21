@@ -427,6 +427,60 @@ export type Database = {
           },
         ]
       }
+      social_links: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          platform: string
+          sort_order: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          sort_order?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          sort_order?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          has_access: boolean | null
+          id: string
+          section: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          has_access?: boolean | null
+          id?: string
+          section: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          has_access?: boolean | null
+          id?: string
+          section?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

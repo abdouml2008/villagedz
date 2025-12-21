@@ -1,10 +1,27 @@
 import { Link } from 'react-router-dom';
 import { LogoMark } from './Logo';
-import { Facebook, Instagram, Phone } from 'lucide-react';
+import { Facebook, Instagram, Phone, Youtube, Send, MessageCircle, Twitter, Camera, Music2, Globe, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+
+const getIconComponent = (iconName: string | null) => {
+  switch (iconName) {
+    case 'Instagram': return Instagram;
+    case 'Facebook': return Facebook;
+    case 'Music2': return Music2;
+    case 'MessageCircle': return MessageCircle;
+    case 'Send': return Send;
+    case 'Youtube': return Youtube;
+    case 'Twitter': return Twitter;
+    case 'Camera': return Camera;
+    case 'Phone': return Phone;
+    case 'Mail': return Mail;
+    case 'Globe': return Globe;
+    default: return Globe;
+  }
+};
 
 export function StoreFooter() {
   const { language } = useLanguage();
@@ -19,6 +36,20 @@ export function StoreFooter() {
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
+  });
+
+  const { data: socialLinks = [] } = useQuery({
+    queryKey: ['social-links'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('social_links')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60000,
   });
 
   return (
@@ -41,16 +72,35 @@ export function StoreFooter() {
             </div>
             <p className="text-muted-foreground text-sm">{t.footer.storeDescription}</p>
             {/* Social Links */}
-            <div className="flex gap-3 mt-4">
-              <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                <Phone className="w-4 h-4" />
-              </a>
+            <div className="flex gap-3 mt-4 flex-wrap">
+              {socialLinks.length > 0 ? (
+                socialLinks.map((link) => {
+                  const IconComp = getIconComponent(link.icon);
+                  return (
+                    <a 
+                      key={link.id}
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      <IconComp className="w-4 h-4" />
+                    </a>
+                  );
+                })
+              ) : (
+                <>
+                  <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                  <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+                    <Instagram className="w-4 h-4" />
+                  </a>
+                  <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </a>
+                </>
+              )}
             </div>
           </div>
           <div>
