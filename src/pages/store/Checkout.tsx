@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { Wilaya } from '@/types/store';
 import { Tag, X, Check, Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Validation schema for order form
 const orderFormSchema = z.object({
@@ -38,6 +40,8 @@ const orderFormSchema = z.object({
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const { items: cartItems, totalPrice: cartTotalPrice, totalDiscount: cartTotalDiscount, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -100,7 +104,7 @@ export default function Checkout() {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error('يرجى إدخال كود الكوبون');
+      toast.error(t.checkout.enterCoupon);
       return;
     }
     
@@ -120,7 +124,7 @@ export default function Checkout() {
       if (error) throw error;
       
       if (!result || !result.valid) {
-        toast.error(result?.error || 'كود الكوبون غير صالح');
+        toast.error(result?.error || t.checkout.invalidCoupon);
         return;
       }
       
@@ -134,10 +138,10 @@ export default function Checkout() {
         applies_to_all: result.applies_to_all,
         created_at: ''
       } as Coupon);
-      toast.success('تم تطبيق الكوبون بنجاح!');
+      toast.success(t.checkout.couponApplied);
     } catch (error) {
       logger.error('Coupon validation error:', error);
-      toast.error('حدث خطأ أثناء التحقق من الكوبون');
+      toast.error(t.checkout.couponError);
     } finally {
       setCouponLoading(false);
     }
@@ -146,7 +150,7 @@ export default function Checkout() {
   const removeCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode('');
-    toast.success('تم إزالة الكوبون');
+    toast.success(t.checkout.couponRemoved);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +165,7 @@ export default function Checkout() {
     }
     
     if (items.length === 0) {
-      toast.error('السلة فارغة');
+      toast.error(t.checkout.emptyCart);
       return;
     }
     
@@ -189,7 +193,7 @@ export default function Checkout() {
         if (stockCheckError) throw stockCheckError;
         
         if (!currentProduct || currentProduct.stock < item.quantity) {
-          toast.error(`الكمية المطلوبة من "${currentProduct?.name || item.product.name}" غير متوفرة. المتوفر: ${currentProduct?.stock || 0}`);
+          toast.error(t.checkout.quantityUnavailable.replace('{name}', currentProduct?.name || item.product.name).replace('{available}', String(currentProduct?.stock || 0)));
           setLoading(false);
           return;
         }
@@ -257,11 +261,11 @@ export default function Checkout() {
       if (!directItem) {
         clearCart();
       }
-      toast.success('تم إرسال طلبك بنجاح!');
+      toast.success(t.checkout.orderSuccess);
       navigate('/');
     } catch (error) {
       logger.error('Order submission error:', error);
-      toast.error('حدث خطأ أثناء إرسال الطلب');
+      toast.error(t.checkout.orderError);
     } finally {
       setLoading(false);
     }
@@ -270,55 +274,55 @@ export default function Checkout() {
   return (
     <StoreLayout>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">إتمام الطلب</h1>
+        <h1 className="text-3xl font-bold mb-8">{t.checkout.title}</h1>
         
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6 bg-card rounded-xl p-6 shadow-village-sm border border-border">
-            <h2 className="text-xl font-bold">معلومات التوصيل</h2>
+            <h2 className="text-xl font-bold">{t.checkout.deliveryInfo}</h2>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">الاسم</Label>
+                <Label htmlFor="firstName">{t.checkout.firstName}</Label>
                 <Input id="firstName" value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} required />
               </div>
               <div>
-                <Label htmlFor="lastName">اللقب</Label>
+                <Label htmlFor="lastName">{t.checkout.lastName}</Label>
                 <Input id="lastName" value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value})} required />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input id="phone" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="05XXXXXXXX" required />
+              <Label htmlFor="phone">{t.checkout.phone}</Label>
+              <Input id="phone" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder={t.checkout.phonePlaceholder} required />
             </div>
 
             <div>
-              <Label>الولاية</Label>
+              <Label>{t.checkout.wilaya}</Label>
               <Select value={form.wilayaId} onValueChange={v => setForm({...form, wilayaId: v})}>
-                <SelectTrigger><SelectValue placeholder={wilayasLoading ? "جاري التحميل..." : "اختر الولاية"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={wilayasLoading ? t.common.loading : t.checkout.selectWilaya} /></SelectTrigger>
                 <SelectContent className="max-h-60">
                   {wilayas?.map(w => (
-                    <SelectItem key={w.id} value={w.id.toString()}>{w.code} - {w.name_ar}</SelectItem>
+                    <SelectItem key={w.id} value={w.id.toString()}>{w.code} - {language === 'ar' ? w.name_ar : w.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label>نوع التوصيل</Label>
+              <Label>{t.checkout.deliveryType}</Label>
               <RadioGroup value={form.deliveryType} onValueChange={v => setForm({...form, deliveryType: v as 'home' | 'office'})} className="mt-2">
                 <div className="flex items-center space-x-reverse space-x-3 p-4 border border-border rounded-lg">
                   <RadioGroupItem value="office" id="office" />
                   <Label htmlFor="office" className="flex-1 cursor-pointer">
-                    <span className="font-medium">توصيل للمكتب</span>
-                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.office_delivery_price || 400} دج</span>
+                    <span className="font-medium">{t.checkout.officeDelivery}</span>
+                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.office_delivery_price || 400} {t.common.currency}</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-reverse space-x-3 p-4 border border-border rounded-lg">
                   <RadioGroupItem value="home" id="home" />
                   <Label htmlFor="home" className="flex-1 cursor-pointer">
-                    <span className="font-medium">توصيل للمنزل</span>
-                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.home_delivery_price || 600} دج</span>
+                    <span className="font-medium">{t.checkout.homeDelivery}</span>
+                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.home_delivery_price || 600} {t.common.currency}</span>
                   </Label>
                 </div>
               </RadioGroup>
@@ -326,7 +330,7 @@ export default function Checkout() {
           </div>
 
           <div className="bg-card rounded-xl p-6 shadow-village-md border border-border h-fit sticky top-24">
-            <h2 className="text-xl font-bold mb-4">ملخص الطلب</h2>
+            <h2 className="text-xl font-bold mb-4">{t.checkout.orderSummary}</h2>
             <div className="space-y-3 mb-4 max-h-60 overflow-auto">
               {items.map((item, i) => {
                 const priceInfo = getItemPrice(item);
@@ -336,11 +340,11 @@ export default function Checkout() {
                     <div className="text-left">
                       {priceInfo.hasDiscount ? (
                         <>
-                          <span className="text-green-600">{priceInfo.discountedPrice.toFixed(0)} دج</span>
+                          <span className="text-green-600">{priceInfo.discountedPrice.toFixed(0)} {t.common.currency}</span>
                           <span className="text-muted-foreground line-through text-xs mr-1">{priceInfo.originalPrice.toFixed(0)}</span>
                         </>
                       ) : (
-                        <span>{priceInfo.originalPrice.toFixed(0)} دج</span>
+                        <span>{priceInfo.originalPrice.toFixed(0)} {t.common.currency}</span>
                       )}
                     </div>
                   </div>
@@ -352,7 +356,7 @@ export default function Checkout() {
             <div className="border-t border-border pt-4 mb-4">
               <Label className="flex items-center gap-2 mb-2">
                 <Tag className="w-4 h-4" />
-                كود الخصم
+                {t.checkout.couponCode}
               </Label>
               {appliedCoupon ? (
                 <div className="flex items-center justify-between bg-green-500/10 text-green-600 p-3 rounded-lg">
@@ -360,7 +364,7 @@ export default function Checkout() {
                     <Check className="w-4 h-4" />
                     <span className="font-semibold">{appliedCoupon.code}</span>
                     <span className="text-sm">
-                      ({appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${appliedCoupon.discount_value} دج`})
+                      ({appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${appliedCoupon.discount_value} ${t.common.currency}`})
                     </span>
                   </div>
                   <button type="button" onClick={removeCoupon} className="hover:bg-green-500/20 p-1 rounded">
@@ -372,7 +376,7 @@ export default function Checkout() {
                   <Input 
                     value={couponCode}
                     onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="أدخل الكود هنا"
+                    placeholder={t.checkout.enterCode}
                     className="uppercase"
                   />
                   <Button 
@@ -381,27 +385,27 @@ export default function Checkout() {
                     onClick={applyCoupon}
                     disabled={couponLoading}
                   >
-                    {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'تطبيق'}
+                    {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.apply}
                   </Button>
                 </div>
               )}
             </div>
 
             <div className="border-t border-border pt-4 space-y-2">
-              <div className="flex justify-between"><span>المنتجات</span><span>{(totalPrice + totalDiscount).toFixed(0)} دج</span></div>
+              <div className="flex justify-between"><span>{t.checkout.products}</span><span>{(totalPrice + totalDiscount).toFixed(0)} {t.common.currency}</span></div>
               {totalDiscount > 0 && (
-                <div className="flex justify-between text-green-600"><span>خصم الكمية</span><span>-{totalDiscount.toFixed(0)} دج</span></div>
+                <div className="flex justify-between text-green-600"><span>{t.checkout.quantityDiscount}</span><span>-{totalDiscount.toFixed(0)} {t.common.currency}</span></div>
               )}
               {couponDiscount > 0 && (
-                <div className="flex justify-between text-green-600"><span>خصم الكوبون</span><span>-{couponDiscount.toFixed(0)} دج</span></div>
+                <div className="flex justify-between text-green-600"><span>{t.checkout.couponDiscount}</span><span>-{couponDiscount.toFixed(0)} {t.common.currency}</span></div>
               )}
-              <div className="flex justify-between"><span>التوصيل</span><span>{deliveryPrice} دج</span></div>
+              <div className="flex justify-between"><span>{t.cart.delivery}</span><span>{deliveryPrice} {t.common.currency}</span></div>
               <div className="flex justify-between text-xl font-bold pt-2 border-t border-border">
-                <span>الإجمالي</span><span className="text-primary">{finalTotal.toFixed(0)} دج</span>
+                <span>{t.cart.total}</span><span className="text-primary">{finalTotal.toFixed(0)} {t.common.currency}</span>
               </div>
             </div>
             <Button type="submit" disabled={loading} className="w-full mt-6 gradient-primary text-primary-foreground text-lg py-6">
-              {loading ? 'جاري الإرسال...' : 'تأكيد الطلب'}
+              {loading ? t.checkout.submitting : t.checkout.confirmOrder}
             </Button>
           </div>
         </form>
