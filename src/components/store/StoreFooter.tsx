@@ -52,6 +52,13 @@ export function StoreFooter() {
     staleTime: 60000,
   });
 
+  // Separate contact info (phone, email) from social media icons
+  const contactInfo = socialLinks.filter(link => link.platform === 'phone' || link.platform === 'email');
+  const socialMediaLinks = socialLinks.filter(link => link.platform !== 'phone' && link.platform !== 'email');
+
+  const phoneLink = contactInfo.find(link => link.platform === 'phone');
+  const emailLink = contactInfo.find(link => link.platform === 'email');
+
   return (
     <footer className="relative bg-card border-t border-border mt-16 overflow-hidden">
       {/* Background Pattern */}
@@ -62,6 +69,7 @@ export function StoreFooter() {
       
       <div className="container mx-auto px-4 py-12 relative">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Logo Section - without social icons */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <LogoMark className="w-10 h-10" />
@@ -71,10 +79,59 @@ export function StoreFooter() {
               </div>
             </div>
             <p className="text-muted-foreground text-sm">{t.footer.storeDescription}</p>
-            {/* Social Links */}
+          </div>
+
+          {/* Categories Section */}
+          <div>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.categories}</h4>
+            <div className="flex flex-col gap-2">
+              {categories.map((category) => (
+                <Link 
+                  key={category.id}
+                  to={`/category/${category.slug}`} 
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                >
+                  {language === 'ar' ? category.name_ar : category.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Customer Service Section */}
+          <div>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.customerService}</h4>
+            <div className="flex flex-col gap-2">
+              <Link to="/cart" className="text-muted-foreground hover:text-primary transition-colors text-sm">{t.footer.cart}</Link>
+              <span className="text-muted-foreground text-sm">{t.footer.payOnDelivery}</span>
+              <span className="text-muted-foreground text-sm">{t.footer.qualityGuarantee}</span>
+            </div>
+          </div>
+
+          {/* Contact Us Section - with dynamic phone/email + social icons */}
+          <div>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.contactUs}</h4>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <p>📍 {t.footer.location}</p>
+              {emailLink ? (
+                <a href={`mailto:${emailLink.url}`} className="hover:text-primary transition-colors">
+                  📧 {emailLink.url}
+                </a>
+              ) : (
+                <p>📧 info@village.dz</p>
+              )}
+              {phoneLink ? (
+                <a href={`tel:${phoneLink.url}`} className="hover:text-primary transition-colors">
+                  📱 {phoneLink.url}
+                </a>
+              ) : (
+                <p>📱 +213 XXX XXX XXX</p>
+              )}
+            </div>
+            
+            {/* Social Media Icons */}
             <div className="flex gap-3 mt-4 flex-wrap">
-              {socialLinks.length > 0 ? (
-                socialLinks.map((link) => {
+              {socialMediaLinks.length > 0 ? (
+                socialMediaLinks.map((link) => {
                   const IconComp = getIconComponent(link.icon);
                   return (
                     <a 
@@ -96,41 +153,8 @@ export function StoreFooter() {
                   <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
                     <Instagram className="w-4 h-4" />
                   </a>
-                  <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
-                    <Phone className="w-4 h-4" />
-                  </a>
                 </>
               )}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground">{t.footer.categories}</h4>
-            <div className="flex flex-col gap-2">
-              {categories.map((category) => (
-                <Link 
-                  key={category.id}
-                  to={`/category/${category.slug}`} 
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                >
-                  {language === 'ar' ? category.name_ar : category.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground">{t.footer.customerService}</h4>
-            <div className="flex flex-col gap-2">
-              <Link to="/cart" className="text-muted-foreground hover:text-primary transition-colors text-sm">{t.footer.cart}</Link>
-              <span className="text-muted-foreground text-sm">{t.footer.payOnDelivery}</span>
-              <span className="text-muted-foreground text-sm">{t.footer.qualityGuarantee}</span>
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground">{t.footer.contactUs}</h4>
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <p>📍 {t.footer.location}</p>
-              <p>📧 info@village.dz</p>
-              <p>📱 +213 XXX XXX XXX</p>
             </div>
           </div>
         </div>
