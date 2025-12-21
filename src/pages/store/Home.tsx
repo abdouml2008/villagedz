@@ -29,11 +29,34 @@ export default function Home() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
   
-  // Parallax effect for hero background
+  // Split Screen + Smooth Reveal Parallax effects
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
-  const contentY = useTransform(scrollY, [0, 500], [0, -50]);
-  const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
+  
+  // Background moves up and scales
+  const bgY = useTransform(scrollY, [0, 600], [0, -200]);
+  const bgScale = useTransform(scrollY, [0, 600], [1, 1.15]);
+  
+  // Content moves down with blur
+  const contentY = useTransform(scrollY, [0, 600], [0, 120]);
+  const contentBlur = useTransform(scrollY, [0, 400], [0, 8]);
+  
+  // Split line effect
+  const splitLineWidth = useTransform(scrollY, [100, 400], [0, 100]);
+  const splitLineOpacity = useTransform(scrollY, [50, 200, 500], [0, 1, 0]);
+  
+  // Overlay intensity increases on scroll
+  const overlayOpacity = useTransform(scrollY, [0, 400], [0.6, 0.9]);
+  
+  // Mouse glow effect
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -137,82 +160,169 @@ export default function Home() {
       {/* Promo Banner */}
       <PromoBanner />
       
-      {/* Hero Section with Background Image */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Parallax Background Image */}
+      {/* Hero Section with Split Screen + Smooth Reveal */}
+      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
+        {/* Parallax Background Image - Moves up and scales */}
         <motion.div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
           style={{ 
             backgroundImage: 'url("/images/village-bg.png")',
-            y: heroY,
+            y: bgY,
+            scale: bgScale,
           }}
         />
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/60 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
+        {/* Dynamic Gradient Overlay */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background"
+          style={{ opacity: overlayOpacity }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
+        
+        {/* Mouse Glow Effect */}
+        <div 
+          className="absolute w-[500px] h-[500px] rounded-full pointer-events-none transition-all duration-300 ease-out"
+          style={{
+            background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
+            left: mousePosition.x - 250,
+            top: mousePosition.y - 250,
+            filter: 'blur(40px)',
+          }}
+        />
         
         {/* Floating Particles */}
         <FloatingParticles />
         
         {/* Decorative Blur Elements */}
-        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <motion.div 
+          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px]"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.3, 0.2] 
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[80px]"
+          animate={{ 
+            scale: [1, 1.15, 1],
+            opacity: [0.2, 0.35, 0.2] 
+          }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
         
-        {/* Content */}
+        {/* Split Line Effect */}
+        <motion.div 
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent pointer-events-none z-20"
+          style={{ 
+            width: splitLineWidth.get() + '%',
+            opacity: splitLineOpacity,
+            boxShadow: '0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.3)'
+          }}
+        />
+        
+        {/* Content - Moves down with blur on scroll */}
         <motion.div 
           className="container mx-auto text-center relative z-10 px-4 py-24"
-          style={{ y: contentY, scale }}
+          style={{ 
+            y: contentY,
+            filter: `blur(${contentBlur.get()}px)`
+          }}
         >
-          <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            {t.home.welcome} <span className="text-gradient drop-shadow-lg">Village</span>
-          </motion.h1>
+          {/* Animated Title with Reveal Effect */}
+          <motion.div className="overflow-hidden">
+            <motion.h1 
+              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.span
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                {t.home.welcome}{' '}
+              </motion.span>
+              <motion.span 
+                className="text-gradient drop-shadow-lg inline-block"
+                initial={{ opacity: 0, scale: 0.8, rotateX: 90 }}
+                animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+              >
+                Village
+              </motion.span>
+            </motion.h1>
+          </motion.div>
           
           <motion.p 
             className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
           >
             {t.home.heroDescription}
           </motion.p>
           
+          {/* Staggered Buttons */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: { 
+                opacity: 1,
+                transition: { staggerChildren: 0.15, delayChildren: 0.9 }
+              }
+            }}
           >
-            <Link 
-              to="/category/men" 
-              className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 30, scale: 0.9 },
+                visible: { opacity: 1, y: 0, scale: 1 }
+              }}
             >
-              {t.home.shopNow}
-              <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link 
-              to="/category/women" 
-              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
+              <Link 
+                to="/category/men" 
+                className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
+              >
+                {t.home.shopNow}
+                <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 30, scale: 0.9 },
+                visible: { opacity: 1, y: 0, scale: 1 }
+              }}
             >
-              {t.home.browseCollection}
-            </Link>
+              <Link 
+                to="/category/women" 
+                className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
+              >
+                {t.home.browseCollection}
+              </Link>
+            </motion.div>
           </motion.div>
           
           {/* Product Showcase & Stats */}
           <motion.div 
             className="mt-16 md:mt-20 max-w-5xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            transition={{ duration: 1, delay: 1.2, ease: "easeOut" }}
           >
             {/* Product Carousel */}
             <div className="mb-8">
-              <p className="text-center text-sm text-muted-foreground mb-4">منتجاتنا المميزة</p>
+              <motion.p 
+                className="text-center text-sm text-muted-foreground mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4 }}
+              >
+                منتجاتنا المميزة
+              </motion.p>
               <ProductShowcaseCarousel />
             </div>
             
@@ -221,19 +331,27 @@ export default function Home() {
           </motion.div>
         </motion.div>
         
-        {/* Scroll Indicator */}
+        {/* Enhanced Scroll Indicator */}
         <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.5 }}
         >
-          <div className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-2">
-            <motion.div 
-              className="w-1.5 h-3 bg-primary rounded-full"
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="flex flex-col items-center gap-2"
+          >
+            <span className="text-xs text-muted-foreground">اكتشف المزيد</span>
+            <div className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-2 backdrop-blur-sm bg-background/10">
+              <motion.div 
+                className="w-1.5 h-3 bg-primary rounded-full"
+                animate={{ y: [0, 12, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
