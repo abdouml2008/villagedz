@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -266,24 +266,20 @@ export default function AdminUsers() {
 
   const openPermissionsDialog = async (userData: UserData) => {
     setPermissionsUser(userData);
+    setUserPermissions({}); // Reset permissions for new user
     setIsPermissionsDialogOpen(true);
   };
 
   // Update local permissions when fetched permissions change
-  const initPermissions = () => {
-    if (fetchedPermissions) {
+  useEffect(() => {
+    if (isPermissionsDialogOpen && fetchedPermissions) {
       const permMap: Record<string, boolean> = {};
       fetchedPermissions.forEach(p => {
         permMap[p.section] = p.has_access;
       });
       setUserPermissions(permMap);
     }
-  };
-
-  // Call initPermissions when dialog opens with fetched data
-  if (isPermissionsDialogOpen && fetchedPermissions && Object.keys(userPermissions).length === 0) {
-    initPermissions();
-  }
+  }, [fetchedPermissions, isPermissionsDialogOpen]);
 
   const handleUpdateUser = () => {
     if (!editUser) return;
