@@ -66,19 +66,77 @@ export default function AdminProducts() {
     }
   });
 
+  // Compress image before upload
+  const compressImage = async (file: File, maxWidth = 1200, quality = 0.8): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Scale down if larger than maxWidth
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadImage = async (file: File): Promise<string> => {
     const client = await getSupabase();
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     
-    const { error } = await client.storage.from('product-images').upload(fileName, file);
+    // Compress image before upload
+    let fileToUpload = file;
+    try {
+      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+        toast.info('جاري ضغط الصورة...');
+        fileToUpload = await compressImage(file);
+      }
+    } catch (error) {
+      console.warn('Image compression failed, uploading original:', error);
+    }
+    
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+    
+    const { error } = await client.storage.from('product-images').upload(fileName, fileToUpload);
     if (error) throw error;
     
     const { data: { publicUrl } } = client.storage.from('product-images').getPublicUrl(fileName);
     return publicUrl;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type - only allow images
@@ -88,9 +146,9 @@ export default function AdminProducts() {
         return;
       }
       
-      // Validate file size - max 5MB
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      // Validate file size - max 10MB (increased since we'll compress)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('حجم الصورة يجب أن يكون أقل من 10 ميجابايت');
         return;
       }
       setImageFile(file);
@@ -157,7 +215,7 @@ export default function AdminProducts() {
         toast.error('نوع الملف غير مدعوم. يرجى رفع صورة (JPEG, PNG, WebP, GIF)');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) {
         toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
         return;
       }
@@ -168,7 +226,7 @@ export default function AdminProducts() {
 
   const processAdditionalFiles = (files: File[]) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024; // Increased since we'll compress
     const maxImages = 10;
     
     const currentCount = additionalImages.length + additionalImageFiles.length;
@@ -186,7 +244,7 @@ export default function AdminProducts() {
         continue;
       }
       if (file.size > maxSize) {
-        toast.error(`${file.name}: حجم الصورة يجب أن يكون أقل من 5 ميجابايت`);
+        toast.error(`${file.name}: حجم الصورة يجب أن يكون أقل من 10 ميجابايت`);
         continue;
       }
       validFiles.push(file);
