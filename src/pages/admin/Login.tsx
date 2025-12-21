@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Button } from '@/components/ui/button';
@@ -113,6 +114,13 @@ export default function AdminLogin() {
           <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground">
             {loading ? 'جاري المعالجة...' : 'دخول'}
           </Button>
+          
+          <Link to="/" className="block mt-4">
+            <Button type="button" variant="outline" className="w-full">
+              <Home className="w-4 h-4 ml-2" />
+              العودة للموقع الرئيسي
+            </Button>
+          </Link>
         </form>
       </div>
     </div>
