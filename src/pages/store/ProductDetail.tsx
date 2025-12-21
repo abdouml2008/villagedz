@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Zap } from 'lucide-react';
 import { Product } from '@/types/store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { t } = useTranslation();
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedSize, setSelectedSize] = useState<string>();
   const [selectedColor, setSelectedColor] = useState<string>();
@@ -60,7 +62,7 @@ export default function ProductDetail() {
     return (
       <StoreLayout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl">المنتج غير موجود</h1>
+          <h1 className="text-2xl">{t.product.notFound}</h1>
         </div>
       </StoreLayout>
     );
@@ -79,11 +81,11 @@ export default function ProductDetail() {
           <div className="space-y-6">
             <h1 className="text-4xl font-bold">{product.name}</h1>
             <div>
-              <p className="text-3xl font-bold text-primary">{product.price} دج</p>
+              <p className="text-3xl font-bold text-primary">{product.price} {t.common.currency}</p>
               {product.discount_quantity && product.discount_percentage && (
                 <p className="text-green-600 text-sm mt-1 flex items-center gap-1">
                   <span className="bg-green-500/10 px-2 py-0.5 rounded-full">
-                    اشترِ {product.discount_quantity} أو أكثر واحصل على خصم {product.discount_percentage}%
+                    {t.product.buyDiscount.replace('{quantity}', String(product.discount_quantity)).replace('{percentage}', String(product.discount_percentage))}
                   </span>
                 </p>
               )}
@@ -93,11 +95,11 @@ export default function ProductDetail() {
             <div className="flex items-center gap-2">
               {product.stock > 0 ? (
                 <span className="bg-green-500/10 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
-                  متوفر ({product.stock} قطعة)
+                  {t.common.inStock} ({product.stock} {t.product.pieces})
                 </span>
               ) : (
                 <span className="bg-red-500/10 text-red-600 px-3 py-1 rounded-full text-sm font-medium">
-                  غير متوفر
+                  {t.common.outOfStock}
                 </span>
               )}
             </div>
@@ -106,7 +108,7 @@ export default function ProductDetail() {
 
             {product.sizes && product.sizes.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">المقاس</h3>
+                <h3 className="font-semibold mb-2">{t.product.size}</h3>
                 <div className="flex gap-2 flex-wrap">
                   {product.sizes.map(size => (
                     <button
@@ -125,7 +127,7 @@ export default function ProductDetail() {
 
             {product.colors && product.colors.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">اللون</h3>
+                <h3 className="font-semibold mb-2">{t.product.color}</h3>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map(color => (
                     <button
@@ -143,7 +145,7 @@ export default function ProductDetail() {
             )}
 
             <div>
-              <h3 className="font-semibold mb-2">الكمية</h3>
+              <h3 className="font-semibold mb-2">{t.product.quantity}</h3>
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setQuantity(Math.max(product.min_quantity || 1, quantity - 1))} 
@@ -165,10 +167,10 @@ export default function ProductDetail() {
                 </button>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {product.min_quantity && product.min_quantity > 1 && `الحد الأدنى: ${product.min_quantity}`}
+                {product.min_quantity && product.min_quantity > 1 && `${t.product.minQuantity}: ${product.min_quantity}`}
                 {product.min_quantity && product.min_quantity > 1 && (product.max_quantity || product.stock > 0) && ' | '}
-                {product.max_quantity && `الحد الأقصى: ${Math.min(product.max_quantity, product.stock)}`}
-                {!product.max_quantity && product.stock > 0 && `المتوفر: ${product.stock}`}
+                {product.max_quantity && `${t.product.maxQuantity}: ${Math.min(product.max_quantity, product.stock)}`}
+                {!product.max_quantity && product.stock > 0 && `${t.product.stock}: ${product.stock}`}
               </p>
             </div>
 
@@ -181,7 +183,7 @@ export default function ProductDetail() {
                 disabled={product.stock === 0 || quantity > product.stock}
               >
                 <ShoppingCart className="w-5 h-5 ml-2" />
-                {product.stock === 0 ? 'غير متوفر' : 'أضف للسلة'}
+                {product.stock === 0 ? t.common.outOfStock : t.product.addToCart}
               </Button>
               <Button
                 size="lg"
@@ -201,7 +203,7 @@ export default function ProductDetail() {
                 }}
               >
                 <Zap className="w-5 h-5 ml-2" />
-                {product.stock === 0 ? 'غير متوفر' : 'اطلب الآن'}
+                {product.stock === 0 ? t.common.outOfStock : t.product.orderNow}
               </Button>
             </div>
           </div>
