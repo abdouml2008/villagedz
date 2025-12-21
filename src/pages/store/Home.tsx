@@ -29,34 +29,11 @@ export default function Home() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
   
-  // Split Screen + Smooth Reveal Parallax effects
+  // Simple parallax effect
   const { scrollY } = useScroll();
-  
-  // Background moves up and scales
-  const bgY = useTransform(scrollY, [0, 600], [0, -200]);
-  const bgScale = useTransform(scrollY, [0, 600], [1, 1.15]);
-  
-  // Content moves down with blur
-  const contentY = useTransform(scrollY, [0, 600], [0, 120]);
-  const contentBlur = useTransform(scrollY, [0, 400], [0, 8]);
-  
-  // Split line effect
-  const splitLineWidth = useTransform(scrollY, [100, 400], [0, 100]);
-  const splitLineOpacity = useTransform(scrollY, [50, 200, 500], [0, 1, 0]);
-  
-  // Overlay intensity increases on scroll
-  const overlayOpacity = useTransform(scrollY, [0, 400], [0.6, 0.9]);
-  
-  // Mouse glow effect
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  const bgY = useTransform(scrollY, [0, 600], [0, -150]);
+  const bgScale = useTransform(scrollY, [0, 600], [1, 1.1]);
+  const contentOpacity = useTransform(scrollY, [0, 400], [1, 0.3]);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -160,9 +137,9 @@ export default function Home() {
       {/* Promo Banner */}
       <PromoBanner />
       
-      {/* Hero Section with Split Screen + Smooth Reveal */}
+      {/* Hero Section - Simplified */}
       <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
-        {/* Parallax Background Image - Moves up and scales */}
+        {/* Parallax Background */}
         <motion.div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
           style={{ 
@@ -172,62 +149,21 @@ export default function Home() {
           }}
         />
         
-        {/* Dynamic Gradient Overlay */}
-        <motion.div 
-          className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background"
-          style={{ opacity: overlayOpacity }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40" />
-        
-        {/* Mouse Glow Effect */}
-        <div 
-          className="absolute w-[500px] h-[500px] rounded-full pointer-events-none transition-all duration-300 ease-out"
-          style={{
-            background: 'radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)',
-            left: mousePosition.x - 250,
-            top: mousePosition.y - 250,
-            filter: 'blur(40px)',
-          }}
-        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
         
         {/* Floating Particles */}
         <FloatingParticles />
         
-        {/* Decorative Blur Elements */}
-        <motion.div 
-          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px]"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.3, 0.2] 
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[80px]"
-          animate={{ 
-            scale: [1, 1.15, 1],
-            opacity: [0.2, 0.35, 0.2] 
-          }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
+        {/* Decorative Elements */}
+        <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />
         
-        {/* Split Line Effect */}
-        <motion.div 
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent pointer-events-none z-20"
-          style={{ 
-            width: splitLineWidth.get() + '%',
-            opacity: splitLineOpacity,
-            boxShadow: '0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.3)'
-          }}
-        />
-        
-        {/* Content - Moves down with blur on scroll */}
+        {/* Content */}
         <motion.div 
           className="container mx-auto text-center relative z-10 px-4 py-24"
-          style={{ 
-            y: contentY,
-            filter: `blur(${contentBlur.get()}px)`
-          }}
+          style={{ opacity: contentOpacity }}
         >
           {/* Animated Title with Reveal Effect */}
           <motion.div className="overflow-hidden">

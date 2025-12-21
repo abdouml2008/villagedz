@@ -39,7 +39,7 @@ const AnimatedCounter = ({ target, suffix = '' }: { target: number; suffix?: str
   }, [target, isInView]);
 
   return (
-    <span ref={ref} className="text-3xl md:text-4xl font-bold text-gradient">
+    <span ref={ref} className="text-2xl md:text-3xl font-bold text-primary">
       {count}{suffix}
     </span>
   );
@@ -48,36 +48,25 @@ const AnimatedCounter = ({ target, suffix = '' }: { target: number; suffix?: str
 const StatItem = ({ value, label, icon, suffix = '', delay = 0 }: StatItemProps) => {
   return (
     <motion.div
-      className="relative group"
+      className="flex items-center gap-3 md:gap-4"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
     >
-      <div className="bg-card/60 backdrop-blur-sm rounded-2xl p-4 md:p-5 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        {/* Glow effect on hover */}
-        <div className="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="relative flex flex-col items-center text-center gap-2">
-          {/* Animated Icon */}
-          <motion.div
-            className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-2"
-            whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
-            transition={{ duration: 0.5 }}
-          >
-            {icon}
-          </motion.div>
-          
-          {/* Counter or Static Value */}
-          {typeof value === 'number' ? (
-            <AnimatedCounter target={value} suffix={suffix} />
-          ) : (
-            <span className="text-3xl md:text-4xl font-bold text-gradient">{value}</span>
-          )}
-          
-          {/* Label */}
-          <p className="text-xs md:text-sm text-muted-foreground font-medium">{label}</p>
-        </div>
+      {/* Icon */}
+      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
+        {icon}
+      </div>
+      
+      {/* Content */}
+      <div className="flex flex-col">
+        {typeof value === 'number' ? (
+          <AnimatedCounter target={value} suffix={suffix} />
+        ) : (
+          <span className="text-2xl md:text-3xl font-bold text-primary">{value}</span>
+        )}
+        <span className="text-xs md:text-sm text-muted-foreground">{label}</span>
       </div>
     </motion.div>
   );
@@ -117,17 +106,19 @@ export const AnimatedStats = ({ totalProducts }: AnimatedStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-      {stats.map((stat, index) => (
-        <StatItem
-          key={index}
-          value={stat.value}
-          label={stat.label}
-          icon={stat.icon}
-          suffix={stat.suffix}
-          delay={index * 0.1}
-        />
-      ))}
+    <div className="bg-card/80 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-border/50 shadow-lg">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        {stats.map((stat, index) => (
+          <StatItem
+            key={index}
+            value={stat.value}
+            label={stat.label}
+            icon={stat.icon}
+            suffix={stat.suffix}
+            delay={index * 0.1}
+          />
+        ))}
+      </div>
     </div>
   );
 };
