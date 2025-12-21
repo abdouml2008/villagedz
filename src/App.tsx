@@ -29,6 +29,7 @@ const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const OrdersByStatus = lazy(() => import("./pages/admin/OrdersByStatus"));
+const AdminSocialLinks = lazy(() => import("./pages/admin/SocialLinks"));
 
 const queryClient = new QueryClient();
 
@@ -60,16 +61,17 @@ const App = () => {
                       <Route path="/track-order" element={<TrackOrder />} />
                       <Route path="/admin" element={<AdminLogin />} />
                       <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                      <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
-                      <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
-                      <Route path="/admin/orders/:status" element={<AdminRoute><OrdersByStatus /></AdminRoute>} />
+                      <Route path="/admin/products" element={<AdminRoute section="products"><AdminProducts /></AdminRoute>} />
+                      <Route path="/admin/orders" element={<AdminRoute section="orders"><AdminOrders /></AdminRoute>} />
+                      <Route path="/admin/orders/:status" element={<AdminRoute section="orders"><OrdersByStatus /></AdminRoute>} />
                       <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-                      <Route path="/admin/delivery-prices" element={<AdminRoute><AdminDeliveryPrices /></AdminRoute>} />
-                      <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
-                      <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
-                      <Route path="/admin/categories" element={<AdminRoute><AdminCategories /></AdminRoute>} />
-                      <Route path="/admin/banners" element={<AdminRoute><AdminBanners /></AdminRoute>} />
-                      <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
+                      <Route path="/admin/delivery-prices" element={<AdminRoute section="delivery-prices"><AdminDeliveryPrices /></AdminRoute>} />
+                      <Route path="/admin/analytics" element={<AdminRoute section="analytics"><AdminAnalytics /></AdminRoute>} />
+                      <Route path="/admin/coupons" element={<AdminRoute section="coupons"><AdminCoupons /></AdminRoute>} />
+                      <Route path="/admin/categories" element={<AdminRoute section="categories"><AdminCategories /></AdminRoute>} />
+                      <Route path="/admin/banners" element={<AdminRoute section="banners"><AdminBanners /></AdminRoute>} />
+                      <Route path="/admin/reviews" element={<AdminRoute section="reviews"><AdminReviews /></AdminRoute>} />
+                      <Route path="/admin/social-links" element={<AdminRoute section="social-links"><AdminSocialLinks /></AdminRoute>} />
                     </Routes>
                   </Suspense>
                 </BrowserRouter>

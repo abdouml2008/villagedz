@@ -8,11 +8,13 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, Key, Edit, Mail } from 'lucide-react';
+import { Plus, Trash2, Key, Edit, Mail, Shield } from 'lucide-react';
 import { z } from 'zod';
+import { ADMIN_SECTIONS, AdminSection } from '@/hooks/useUserPermissions';
 
 const userSchema = z.object({
   email: z.string().email('بريد إلكتروني غير صالح'),
@@ -26,6 +28,11 @@ interface UserData {
   role: 'admin' | 'user';
   created_at: string;
   role_id?: string;
+}
+
+interface UserPermission {
+  section: string;
+  has_access: boolean;
 }
 
 export default function AdminUsers() {
@@ -48,6 +55,11 @@ export default function AdminUsers() {
   const [editRole, setEditRole] = useState<'admin' | 'user'>('user');
   const [editPassword, setEditPassword] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Permissions state
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [permissionsUser, setPermissionsUser] = useState<UserData | null>(null);
+  const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
 
   // Redirect if not admin - show permission denied message
   if (!adminLoading && !user) {
@@ -74,6 +86,23 @@ export default function AdminUsers() {
       return response.data as { users: UserData[]; isAdmin: boolean };
     },
     enabled: !!session,
+  });
+
+  // Fetch user permissions
+  const { data: fetchedPermissions, refetch: refetchPermissions } = useQuery({
+    queryKey: ['user-permissions', permissionsUser?.id],
+    queryFn: async () => {
+      if (!permissionsUser) return [];
+      const client = await getSupabase();
+      const { data, error } = await client
+        .from('user_permissions')
+        .select('section, has_access')
+        .eq('user_id', permissionsUser.id);
+      
+      if (error) throw error;
+      return data as UserPermission[];
+    },
+    enabled: !!permissionsUser,
   });
 
   const createUserMutation = useMutation({
@@ -174,6 +203,38 @@ export default function AdminUsers() {
     },
   });
 
+  const savePermissionsMutation = useMutation({
+    mutationFn: async ({ userId, permissions }: { userId: string; permissions: Record<string, boolean> }) => {
+      const client = await getSupabase();
+      
+      // Delete existing permissions
+      await client.from('user_permissions').delete().eq('user_id', userId);
+      
+      // Insert new permissions
+      const permissionsToInsert = Object.entries(permissions)
+        .filter(([_, hasAccess]) => hasAccess)
+        .map(([section]) => ({
+          user_id: userId,
+          section,
+          has_access: true,
+        }));
+      
+      if (permissionsToInsert.length > 0) {
+        const { error } = await client.from('user_permissions').insert(permissionsToInsert);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success('تم حفظ الصلاحيات بنجاح');
+      setIsPermissionsDialogOpen(false);
+      setPermissionsUser(null);
+      setUserPermissions({});
+    },
+    onError: (error: any) => {
+      toast.error(`خطأ: ${error.message}`);
+    },
+  });
+
   const handleCreateUser = () => {
     const validation = userSchema.safeParse({ email: newEmail, password: newPassword, role: newRole });
     if (!validation.success) {
@@ -203,6 +264,27 @@ export default function AdminUsers() {
     setIsEditDialogOpen(true);
   };
 
+  const openPermissionsDialog = async (userData: UserData) => {
+    setPermissionsUser(userData);
+    setIsPermissionsDialogOpen(true);
+  };
+
+  // Update local permissions when fetched permissions change
+  const initPermissions = () => {
+    if (fetchedPermissions) {
+      const permMap: Record<string, boolean> = {};
+      fetchedPermissions.forEach(p => {
+        permMap[p.section] = p.has_access;
+      });
+      setUserPermissions(permMap);
+    }
+  };
+
+  // Call initPermissions when dialog opens with fetched data
+  if (isPermissionsDialogOpen && fetchedPermissions && Object.keys(userPermissions).length === 0) {
+    initPermissions();
+  }
+
   const handleUpdateUser = () => {
     if (!editUser) return;
     
@@ -222,6 +304,21 @@ export default function AdminUsers() {
       role: editRole !== editUser.role ? editRole : undefined,
       password: editPassword || undefined,
     });
+  };
+
+  const handleSavePermissions = () => {
+    if (!permissionsUser) return;
+    savePermissionsMutation.mutate({
+      userId: permissionsUser.id,
+      permissions: userPermissions,
+    });
+  };
+
+  const togglePermission = (section: string) => {
+    setUserPermissions(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   if (adminLoading || isLoading) {
@@ -392,6 +489,47 @@ export default function AdminUsers() {
         </DialogContent>
       </Dialog>
 
+      {/* Permissions Dialog */}
+      <Dialog open={isPermissionsDialogOpen} onOpenChange={(open) => {
+        setIsPermissionsDialogOpen(open);
+        if (!open) {
+          setPermissionsUser(null);
+          setUserPermissions({});
+        }
+      }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>إدارة صلاحيات المستخدم</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              {permissionsUser?.email}
+            </p>
+            <div className="space-y-3">
+              {ADMIN_SECTIONS.map((section) => (
+                <div key={section.id} className="flex items-center space-x-3 space-x-reverse">
+                  <Checkbox
+                    id={section.id}
+                    checked={userPermissions[section.id] || false}
+                    onCheckedChange={() => togglePermission(section.id)}
+                  />
+                  <Label htmlFor={section.id} className="cursor-pointer flex-1">
+                    {section.name}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            <Button 
+              onClick={handleSavePermissions} 
+              disabled={savePermissionsMutation.isPending}
+              className="w-full gradient-primary"
+            >
+              {savePermissionsMutation.isPending ? 'جاري الحفظ...' : 'حفظ الصلاحيات'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -432,6 +570,18 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
+                      {/* Permissions button - for non-admin users only */}
+                      {currentUserIsAdmin && userData.role === 'user' && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => openPermissionsDialog(userData)}
+                          className="text-amber-500 hover:text-amber-500 hover:bg-amber-500/10"
+                          title="إدارة الصلاحيات"
+                        >
+                          <Shield className="size-4" />
+                        </Button>
+                      )}
                       {/* Edit button - visible for own account or admin for others */}
                       {(userData.id === user?.id || currentUserIsAdmin) && (
                         <Button 
