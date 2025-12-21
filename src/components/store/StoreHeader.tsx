@@ -7,6 +7,8 @@ import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { SearchDialog } from './SearchDialog';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +17,7 @@ export function StoreHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { hasRole } = useHasAnyRole();
+  const { language } = useLanguage();
 
   const { data: categories = [] } = useQuery({
     queryKey: ['header-categories'],
@@ -41,7 +44,7 @@ export function StoreHeader() {
                   to={`/category/${category.slug}`} 
                   className="text-foreground hover:text-primary transition-colors font-medium"
                 >
-                  {category.name_ar}
+                  {language === 'ar' ? category.name_ar : category.name}
                 </Link>
               ))}
             </nav>
@@ -56,6 +59,7 @@ export function StoreHeader() {
               >
                 <Search className="w-5 h-5" />
               </Button>
+              <LanguageSwitcher />
               <ThemeToggle />
               <Link 
                 to={hasRole ? "/admin/dashboard" : "/admin"} 
@@ -87,7 +91,7 @@ export function StoreHeader() {
                 className="text-foreground hover:text-primary transition-colors font-medium" 
                 onClick={() => setMenuOpen(false)}
               >
-                {category.name_ar}
+                {language === 'ar' ? category.name_ar : category.name}
               </Link>
             ))}
             <Link 
