@@ -3,6 +3,7 @@ import { Product } from '@/types/store';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
+  const { t } = useTranslation();
 
   return (
     <div className="group bg-card rounded-xl overflow-hidden shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border">
@@ -23,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              لا توجد صورة
+              {t.product.noImageAvailable}
             </div>
           )}
         </div>
@@ -36,14 +38,14 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
         <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-primary">{product.price} دج</span>
+          <span className="text-xl font-bold text-primary">{product.price} {t.common.currency}</span>
           <Button 
             size="sm" 
             onClick={() => addItem(product)}
             className="gradient-primary text-primary-foreground hover:opacity-90"
           >
             <ShoppingCart className="w-4 h-4 ml-2" />
-            أضف
+            {t.common.add}
           </Button>
         </div>
       </div>

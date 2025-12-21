@@ -7,6 +7,7 @@ import { getSupabase } from '@/hooks/useSupabase';
 import { Product } from '@/types/store';
 import { Link } from 'react-router-dom';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SearchDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface SearchDialogProps {
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,12 +52,12 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         <VisuallyHidden>
-          <DialogTitle>البحث عن المنتجات</DialogTitle>
+          <DialogTitle>{t.search.title}</DialogTitle>
         </VisuallyHidden>
         <div className="flex items-center border-b border-border px-4">
           <Search className="w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="ابحث عن منتج..."
+            placeholder={t.search.placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="border-0 focus-visible:ring-0 text-lg py-6"
@@ -72,14 +74,14 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           {isLoading && (
             <div className="p-8 text-center text-muted-foreground">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-2" />
-              جاري البحث...
+              {t.search.searching}
             </div>
           )}
           
           {!isLoading && debouncedQuery && results?.length === 0 && (
             <div className="p-8 text-center text-muted-foreground">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>لا توجد نتائج لـ "{debouncedQuery}"</p>
+              <p>{t.search.noResults} "{debouncedQuery}"</p>
             </div>
           )}
           
@@ -105,7 +107,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{product.name}</h4>
-                    <p className="text-primary font-bold">{product.price.toLocaleString()} دج</p>
+                    <p className="text-primary font-bold">{product.price.toLocaleString()} {t.common.currency}</p>
                   </div>
                 </Link>
               ))}
@@ -115,7 +117,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           {!debouncedQuery && (
             <div className="p-8 text-center text-muted-foreground">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>اكتب للبحث عن المنتجات</p>
+              <p>{t.search.typeToSearch}</p>
             </div>
           )}
         </div>

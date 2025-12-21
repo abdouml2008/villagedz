@@ -3,8 +3,13 @@ import { LogoMark } from './Logo';
 import { Facebook, Instagram, Phone } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function StoreFooter() {
+  const { language } = useLanguage();
+  const { t } = useTranslation();
+  
   const { data: categories = [] } = useQuery({
     queryKey: ['footer-categories'],
     queryFn: async () => {
@@ -30,11 +35,11 @@ export function StoreFooter() {
             <div className="flex items-center gap-3 mb-4">
               <LogoMark className="w-10 h-10" />
               <div>
-                <h3 className="text-2xl font-bold text-gradient">Village</h3>
-                <span className="text-xs text-muted-foreground">متجر القرية</span>
+                <h3 className="text-2xl font-bold text-gradient">{t.footer.storeName}</h3>
+                <span className="text-xs text-muted-foreground">{t.footer.storeTagline}</span>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">متجركم المفضل للتسوق عبر الإنترنت في الجزائر</p>
+            <p className="text-muted-foreground text-sm">{t.footer.storeDescription}</p>
             {/* Social Links */}
             <div className="flex gap-3 mt-4">
               <a href="#" className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors">
@@ -49,7 +54,7 @@ export function StoreFooter() {
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">الأقسام</h4>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.categories}</h4>
             <div className="flex flex-col gap-2">
               {categories.map((category) => (
                 <Link 
@@ -57,30 +62,30 @@ export function StoreFooter() {
                   to={`/category/${category.slug}`} 
                   className="text-muted-foreground hover:text-primary transition-colors text-sm"
                 >
-                  {category.name_ar}
+                  {language === 'ar' ? category.name_ar : category.name}
                 </Link>
               ))}
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">خدمة العملاء</h4>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.customerService}</h4>
             <div className="flex flex-col gap-2">
-              <Link to="/cart" className="text-muted-foreground hover:text-primary transition-colors text-sm">سلة التسوق</Link>
-              <span className="text-muted-foreground text-sm">الدفع عند الاستلام</span>
-              <span className="text-muted-foreground text-sm">ضمان الجودة</span>
+              <Link to="/cart" className="text-muted-foreground hover:text-primary transition-colors text-sm">{t.footer.cart}</Link>
+              <span className="text-muted-foreground text-sm">{t.footer.payOnDelivery}</span>
+              <span className="text-muted-foreground text-sm">{t.footer.qualityGuarantee}</span>
             </div>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-foreground">تواصل معنا</h4>
+            <h4 className="font-semibold mb-4 text-foreground">{t.footer.contactUs}</h4>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <p>📍 الجزائر</p>
+              <p>📍 {t.footer.location}</p>
               <p>📧 info@village.dz</p>
               <p>📱 +213 XXX XXX XXX</p>
             </div>
           </div>
         </div>
         <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground text-sm">
-          <p>© {new Date().getFullYear()} Village. جميع الحقوق محفوظة</p>
+          <p>© {new Date().getFullYear()} Village. {t.footer.allRightsReserved}</p>
         </div>
       </div>
     </footer>
