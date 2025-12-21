@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { PromoBanner } from '@/components/store/PromoBanner';
 import { CustomerTestimonials } from '@/components/store/CustomerTestimonials';
+import { FloatingParticles } from '@/components/store/FloatingParticles';
+import { ScrollProgressIndicator } from '@/components/store/ScrollProgressIndicator';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Flame, Sparkles, Package, Loader2 } from 'lucide-react';
 import { Product, Category } from '@/types/store';
@@ -13,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
@@ -23,6 +26,11 @@ export default function Home() {
   const { t } = useTranslation();
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const [visibleProducts, setVisibleProducts] = useState(PRODUCTS_PER_PAGE);
+  
+  // Parallax effect for hero background
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.3]);
 
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
@@ -104,114 +112,215 @@ export default function Home() {
   const displayedProducts = allProducts?.slice(0, visibleProducts) || [];
   const hasMoreProducts = allProducts && visibleProducts < allProducts.length;
 
+  // Animation variants
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
   return (
     <StoreLayout>
+      {/* Scroll Progress Indicator */}
+      <ScrollProgressIndicator />
+      
       {/* Promo Banner */}
       <PromoBanner />
       
-      {/* Hero Section */}
-      <section className="relative py-24 px-4 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      {/* Hero Section with Background Image */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Parallax Background Image */}
+        <motion.div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: 'url("/images/village-bg.png")',
+            y: heroY,
+          }}
+        />
         
-        {/* Decorative Pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/60 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
         
-        <div className="container mx-auto text-center relative">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-            {t.home.welcome} <span className="text-gradient">Village</span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        {/* Floating Particles */}
+        <FloatingParticles />
+        
+        {/* Decorative Blur Elements */}
+        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-accent/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
+        
+        {/* Content */}
+        <motion.div 
+          className="container mx-auto text-center relative z-10 px-4 py-24"
+          style={{ opacity: heroOpacity }}
+        >
+          <motion.h1 
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {t.home.welcome} <span className="text-gradient drop-shadow-lg">Village</span>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          >
             {t.home.heroDescription}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          </motion.p>
+          
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          >
             <Link 
               to="/category/men" 
-              className="inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-0.5"
+              className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
             >
               {t.home.shopNow}
-              <ArrowIcon className="w-5 h-5" />
+              <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               to="/category/women" 
-              className="inline-flex items-center justify-center gap-2 bg-card text-foreground px-8 py-4 rounded-xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
             >
               {t.home.browseCollection}
             </Link>
-          </div>
+          </motion.div>
           
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mt-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-gradient">69</span>
-              <p className="text-sm text-muted-foreground mt-1">{t.home.deliveryStates}</p>
+          <motion.div 
+            className="flex flex-wrap justify-center gap-8 md:gap-12 mt-20"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+          >
+            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
+              <span className="text-4xl md:text-5xl font-bold text-gradient">69</span>
+              <p className="text-sm text-muted-foreground mt-2">{t.home.deliveryStates}</p>
             </div>
-            <div className="w-px h-12 bg-border hidden sm:block" />
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-gradient">{totalProducts || 0}</span>
-              <p className="text-sm text-muted-foreground mt-1">{t.home.productsAvailable}</p>
+            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
+              <span className="text-4xl md:text-5xl font-bold text-gradient">{totalProducts || 0}</span>
+              <p className="text-sm text-muted-foreground mt-2">{t.home.productsAvailable}</p>
             </div>
-            <div className="w-px h-12 bg-border hidden sm:block" />
-            <div className="text-center">
-              <span className="text-3xl md:text-4xl font-bold text-gradient">24/7</span>
-              <p className="text-sm text-muted-foreground mt-1">{t.home.customerSupport}</p>
+            <div className="text-center bg-card/50 backdrop-blur-sm rounded-2xl px-8 py-4 border border-border/50">
+              <span className="text-4xl md:text-5xl font-bold text-gradient">24/7</span>
+              <p className="text-sm text-muted-foreground mt-2">{t.home.customerSupport}</p>
             </div>
+          </motion.div>
+        </motion.div>
+        
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="w-6 h-10 rounded-full border-2 border-primary/50 flex items-start justify-center p-2">
+            <motion.div 
+              className="w-1.5 h-3 bg-primary rounded-full"
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Categories */}
       <section className="py-20 px-4 relative">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
+          <motion.div 
+            className="text-center mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.shopByCategory}</h2>
             <p className="text-muted-foreground">{t.home.chooseFromCollection}</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          </motion.div>
+          
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={staggerContainer}
+          >
             {categoriesLoading ? (
               [...Array(4)].map((_, i) => (
                 <div key={i} className="bg-card rounded-2xl p-8 h-44 animate-pulse" />
               ))
             ) : categories && categories.length > 0 ? (
               categories.map((category, index) => (
-                <Link
-                  key={category.id}
-                  to={`/category/${category.slug}`}
-                  className="group relative bg-card rounded-2xl p-6 md:p-8 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border overflow-hidden animate-scale-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Hover Background */}
-                  <div className="absolute inset-0 gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
-                  
-                  <span className="text-5xl md:text-6xl mb-4 block group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
-                  <h3 className="text-lg md:text-xl font-semibold group-hover:text-primary transition-colors">
-                    {language === 'ar' ? category.name_ar : category.name}
-                  </h3>
-                </Link>
+                <motion.div key={category.id} variants={fadeInUp}>
+                  <Link
+                    to={`/category/${category.slug}`}
+                    className="group relative bg-card rounded-2xl p-6 md:p-8 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border overflow-hidden block"
+                  >
+                    {/* Hover Background */}
+                    <div className="absolute inset-0 gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+                    
+                    <span className="text-5xl md:text-6xl mb-4 block group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
+                    <h3 className="text-lg md:text-xl font-semibold group-hover:text-primary transition-colors">
+                      {language === 'ar' ? category.name_ar : category.name}
+                    </h3>
+                  </Link>
+                </motion.div>
               ))
             ) : (
               <div className="col-span-4 text-center py-8 text-muted-foreground">
                 {t.home.noCategories}
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Special Offers Section */}
       {discountedProducts && discountedProducts.length > 0 && (
-        <section className="py-20 px-4 relative bg-destructive/5">
-          <div className="container mx-auto">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Flame className="w-8 h-8 text-destructive animate-pulse" />
+        <section className="py-20 px-4 relative bg-destructive/5 overflow-hidden">
+          {/* Animated Background */}
+          <div className="absolute inset-0">
+            <div className="absolute top-0 left-1/4 w-64 h-64 bg-destructive/10 rounded-full blur-[100px] animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '0.5s' }} />
+          </div>
+          
+          <div className="container mx-auto relative">
+            <motion.div
+              className="flex items-center justify-center gap-3 mb-4"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+            >
+              <Flame className="w-8 h-8 text-destructive animate-bounce" />
               <h2 className="text-3xl md:text-4xl font-bold">{t.home.specialOffers}</h2>
-              <Flame className="w-8 h-8 text-destructive animate-pulse" />
-            </div>
-            <p className="text-center text-muted-foreground mb-12">{t.home.discountedProducts}</p>
+              <Flame className="w-8 h-8 text-destructive animate-bounce" style={{ animationDelay: '0.2s' }} />
+            </motion.div>
+            <motion.p 
+              className="text-center text-muted-foreground mb-12"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeInUp}
+              transition={{ delay: 0.1 }}
+            >
+              {t.home.discountedProducts}
+            </motion.p>
             
             <Swiper
               modules={[Autoplay, Navigation]}
@@ -239,18 +348,33 @@ export default function Home() {
       )}
 
       {/* Featured Products */}
-      <section className="py-20 px-4 relative bg-secondary/30">
+      <section className="py-20 px-4 relative bg-secondary/30 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
         }} />
         
         <div className="container mx-auto relative">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <motion.div
+            className="flex items-center justify-center gap-3 mb-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+          >
             <Sparkles className="w-7 h-7 text-accent" />
             <h2 className="text-3xl md:text-4xl font-bold">{t.home.latestProducts}</h2>
-          </div>
-          <p className="text-center text-muted-foreground mb-12">{t.home.discoverLatest}</p>
+          </motion.div>
+          <motion.p 
+            className="text-center text-muted-foreground mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            transition={{ delay: 0.1 }}
+          >
+            {t.home.discoverLatest}
+          </motion.p>
           
           {featuredLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -259,11 +383,19 @@ export default function Home() {
               ))}
             </div>
           ) : featuredProducts && featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <motion.div 
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={staggerContainer}
+            >
               {featuredProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <motion.div key={product.id} variants={fadeInUp}>
+                  <ProductCard product={product} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-border">
               <p className="text-xl mb-2">{t.home.noProducts}</p>
@@ -282,11 +414,26 @@ export default function Home() {
       {/* All Products Section */}
       <section className="py-20 px-4 relative">
         <div className="container mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <motion.div
+            className="flex items-center justify-center gap-3 mb-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+          >
             <Package className="w-7 h-7 text-primary" />
             <h2 className="text-3xl md:text-4xl font-bold">{t.home.allProducts}</h2>
-          </div>
-          <p className="text-center text-muted-foreground mb-12">{t.home.exploreAll}</p>
+          </motion.div>
+          <motion.p 
+            className="text-center text-muted-foreground mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            transition={{ delay: 0.1 }}
+          >
+            {t.home.exploreAll}
+          </motion.p>
           
           {allProductsLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -296,20 +443,33 @@ export default function Home() {
             </div>
           ) : displayedProducts.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <motion.div 
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={staggerContainer}
+              >
                 {displayedProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <motion.div key={product.id} variants={fadeInUp}>
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               
               {/* Load More Button */}
               {hasMoreProducts && (
-                <div className="flex justify-center mt-12">
+                <motion.div 
+                  className="flex justify-center mt-12"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                >
                   <Button
                     onClick={handleLoadMore}
                     variant="outline"
                     size="lg"
-                    className="px-8 gap-2"
+                    className="px-8 gap-2 hover:scale-105 transition-transform"
                   >
                     <Loader2 className="w-4 h-4 hidden" />
                     {t.common.loadMore}
@@ -317,7 +477,7 @@ export default function Home() {
                       ({visibleProducts}/{allProducts?.length})
                     </span>
                   </Button>
-                </div>
+                </motion.div>
               )}
             </>
           ) : (
@@ -331,39 +491,65 @@ export default function Home() {
       {/* Features */}
       <section className="py-20 px-4 relative bg-secondary/20">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={staggerContainer}
+          >
+            <motion.div 
+              className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-lg transition-all group"
+              variants={fadeInUp}
+              whileHover={{ y: -5 }}
+            >
               <div className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">🚚</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">{t.home.deliveryTitle}</h3>
               <p className="text-muted-foreground text-sm">{t.home.deliveryDescription}</p>
-            </div>
-            <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
+            </motion.div>
+            
+            <motion.div 
+              className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-lg transition-all group"
+              variants={fadeInUp}
+              whileHover={{ y: -5 }}
+            >
               <div className="w-20 h-20 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">💳</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">{t.home.paymentTitle}</h3>
               <p className="text-muted-foreground text-sm">{t.home.paymentDescription}</p>
-            </div>
-            <div className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-md transition-shadow group">
+            </motion.div>
+            
+            <motion.div 
+              className="text-center p-8 bg-card rounded-2xl border border-border shadow-village-sm hover:shadow-village-lg transition-all group"
+              variants={fadeInUp}
+              whileHover={{ y: -5 }}
+            >
               <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">⭐</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">{t.home.qualityTitle}</h3>
               <p className="text-muted-foreground text-sm">{t.home.qualityDescription}</p>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Banner */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
-          <div className="relative overflow-hidden rounded-3xl gradient-primary p-8 md:p-12 text-center">
+          <motion.div 
+            className="relative overflow-hidden rounded-3xl gradient-primary p-8 md:p-12 text-center"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 animate-pulse" style={{ animationDelay: '0.5s' }} />
             
             <div className="relative">
               <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground mb-4">
@@ -374,13 +560,13 @@ export default function Home() {
               </p>
               <Link 
                 to="/cart"
-                className="inline-flex items-center gap-2 bg-white text-primary px-8 py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors"
+                className="group inline-flex items-center gap-2 bg-white text-primary px-8 py-3 rounded-xl font-semibold hover:bg-white/90 transition-all hover:scale-105"
               >
                 {t.home.shopNow}
-                <ArrowIcon className="w-5 h-5" />
+                <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
     </StoreLayout>
