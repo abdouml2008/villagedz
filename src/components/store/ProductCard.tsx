@@ -4,6 +4,7 @@ import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Sparkles, Percent, AlertTriangle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { use3DTilt } from '@/hooks/use3DTilt';
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +14,11 @@ interface ProductCardProps {
 export function ProductCard({ product, showBadges = true }: ProductCardProps) {
   const { addItem } = useCart();
   const { t } = useTranslation();
+  const { ref, tiltStyle, glareStyle, handlers } = use3DTilt({ 
+    maxTilt: 12, 
+    scale: 1.03,
+    speed: 300 
+  });
 
   // Check if product is new (added within last 7 days)
   const isNew = new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -29,10 +35,18 @@ export function ProductCard({ product, showBadges = true }: ProductCardProps) {
     : product.price;
 
   return (
-    <div className="group bg-card rounded-xl overflow-hidden shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border relative">
+    <div 
+      ref={ref}
+      style={tiltStyle}
+      {...handlers}
+      className="group bg-card rounded-xl overflow-hidden shadow-village-sm hover:shadow-village-lg transition-shadow duration-300 border border-border relative will-change-transform"
+    >
+      {/* 3D Glare Effect */}
+      <div style={glareStyle} />
+      
       {/* Badges */}
       {showBadges && (
-        <div className="absolute top-3 start-3 z-10 flex flex-col gap-2">
+        <div className="absolute top-3 start-3 z-20 flex flex-col gap-2" style={{ transform: 'translateZ(30px)' }}>
           {isNew && !hasDiscount && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent text-accent-foreground shadow-sm">
               <Sparkles className="w-3 h-3" />
@@ -69,7 +83,7 @@ export function ProductCard({ product, showBadges = true }: ProductCardProps) {
           )}
         </div>
       </Link>
-      <div className="p-4">
+      <div className="p-4" style={{ transform: 'translateZ(20px)' }}>
         <Link to={`/product/${product.id}`}>
           <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-1">
             {product.name}
@@ -95,9 +109,13 @@ export function ProductCard({ product, showBadges = true }: ProductCardProps) {
           </div>
           <Button 
             size="sm" 
-            onClick={() => addItem(product)}
+            onClick={(e) => {
+              e.stopPropagation();
+              addItem(product);
+            }}
             disabled={isOutOfStock}
             className="gradient-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            style={{ transform: 'translateZ(25px)' }}
           >
             <ShoppingCart className="w-4 h-4 ml-2" />
             {t.common.add}
