@@ -207,8 +207,16 @@ export default function AdminUsers() {
     mutationFn: async ({ userId, permissions }: { userId: string; permissions: Record<string, boolean> }) => {
       const client = await getSupabase();
       
-      // Delete existing permissions
-      await client.from('user_permissions').delete().eq('user_id', userId);
+      // Delete existing permissions - with error checking
+      const { error: deleteError } = await client
+        .from('user_permissions')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (deleteError) {
+        console.error('Error deleting permissions:', deleteError);
+        throw deleteError;
+      }
       
       // Insert new permissions
       const permissionsToInsert = Object.entries(permissions)
@@ -221,17 +229,27 @@ export default function AdminUsers() {
       
       if (permissionsToInsert.length > 0) {
         const { error } = await client.from('user_permissions').insert(permissionsToInsert);
-        if (error) throw error;
+        if (error) {
+          console.error('Error inserting permissions:', error);
+          throw error;
+        }
       }
+      
+      return permissionsToInsert;
     },
     onSuccess: () => {
+      // Invalidate cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+      refetchPermissions();
+      
       toast.success('تم حفظ الصلاحيات بنجاح');
       setIsPermissionsDialogOpen(false);
       setPermissionsUser(null);
       setUserPermissions({});
     },
     onError: (error: any) => {
-      toast.error(`خطأ: ${error.message}`);
+      console.error('Error saving permissions:', error);
+      toast.error(`خطأ في حفظ الصلاحيات: ${error.message}`);
     },
   });
 
