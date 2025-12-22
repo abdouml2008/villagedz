@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
-import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download, Printer, ChevronDown } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Clock, Truck, Package, Search, Download, Printer, ChevronDown, Edit } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { EditOrderDialog } from '@/components/admin/EditOrderDialog';
 
 type OrderWithDetails = Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] };
 import {
@@ -57,6 +58,7 @@ export default function AdminOrders() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>('pending');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editOrder, setEditOrder] = useState<OrderWithDetails | null>(null);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -485,6 +487,11 @@ export default function AdminOrders() {
                     </SelectContent>
                   </Select>
                   
+                  <Button onClick={() => setEditOrder(order)} variant="outline" size="sm">
+                    <Edit className="w-4 h-4 ml-2" />
+                    تعديل
+                  </Button>
+                  
                   <Button onClick={() => printOrder(order)} variant="outline" size="sm">
                     <Printer className="w-4 h-4 ml-2" />
                     طباعة
@@ -517,6 +524,12 @@ export default function AdminOrders() {
             ))}
           </div>
         )}
+        
+        <EditOrderDialog 
+          order={editOrder} 
+          open={!!editOrder} 
+          onOpenChange={(open) => !open && setEditOrder(null)} 
+        />
       </div>
     </div>
   );
