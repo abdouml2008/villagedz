@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase, getSupabase } from '@/hooks/useSupabase';
@@ -8,9 +8,10 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { Order, Wilaya, OrderItem, Product } from '@/types/store';
 import { logger } from '@/lib/logger';
+import { EditOrderDialog } from '@/components/admin/EditOrderDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,8 @@ const statusColors: Record<string, string> = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
+type OrderWithDetails = Order & { wilaya: Wilaya; items: (OrderItem & { product: Product })[] };
+
 export default function OrdersByStatus() {
   const { status } = useParams<{ status: string }>();
   const { user, loading } = useAuth();
@@ -54,6 +57,7 @@ export default function OrdersByStatus() {
   const { supabase, loading: supabaseLoading } = useSupabase();
   const { hasRole, loading: roleLoading } = useHasAnyRole();
   const queryClient = useQueryClient();
+  const [editOrder, setEditOrder] = useState<OrderWithDetails | null>(null);
 
   useEffect(() => {
     if (!loading && !roleLoading) {
@@ -202,6 +206,11 @@ export default function OrdersByStatus() {
                     </SelectContent>
                   </Select>
                   
+                  <Button onClick={() => setEditOrder(order)} variant="outline" size="sm">
+                    <Edit className="w-4 h-4 ml-2" />
+                    تعديل
+                  </Button>
+                  
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm">
@@ -229,6 +238,12 @@ export default function OrdersByStatus() {
             ))}
           </div>
         )}
+        
+        <EditOrderDialog 
+          order={editOrder} 
+          open={!!editOrder} 
+          onOpenChange={(open) => !open && setEditOrder(null)} 
+        />
       </div>
     </div>
   );

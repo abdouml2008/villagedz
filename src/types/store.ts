@@ -48,6 +48,8 @@ export interface Order {
   total_price: number;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   notes: string | null;
+  coupon_code: string | null;
+  coupon_discount: number | null;
   created_at: string;
   updated_at: string;
   wilaya?: Wilaya;
