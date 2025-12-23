@@ -169,8 +169,6 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-33.33%); }
 }
-
---animate-scroll-rtl: scroll-rtl 30s linear infinite;
 }
 
 @layer base {
