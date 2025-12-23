@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { Product } from '@/types/store';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { queryConfig } from '@/lib/queryConfig';
+import { useState } from 'react';
 
 export const ProductShowcaseCarousel = () => {
+  const [isPaused, setIsPaused] = useState(false);
+  
   const { data: products } = useQuery({
     queryKey: ['showcase-products'],
     queryFn: async () => {
@@ -25,33 +27,32 @@ export const ProductShowcaseCarousel = () => {
 
   if (!products || products.length === 0) return null;
 
-  // Duplicate products for infinite scroll effect
-  const duplicatedProducts = [...products, ...products];
+  // Triple the products for seamless infinite loop
+  const tripleProducts = [...products, ...products, ...products];
 
   return (
     <div className="relative overflow-hidden py-6">
-      <motion.div
-        className="flex gap-6"
-        animate={{ x: [0, -160 * products.length] }}
-        transition={{
-          x: {
-            duration: products.length * 4,
-            repeat: Infinity,
-            ease: "linear",
-          },
+      {/* Gradient fade on edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      
+      <div 
+        className="flex gap-4 md:gap-6"
+        style={{
+          animation: 'scroll-rtl 30s linear infinite',
+          animationPlayState: isPaused ? 'paused' : 'running',
+          width: 'max-content',
         }}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        {duplicatedProducts.map((product, index) => (
+        {tripleProducts.map((product, index) => (
           <Link
             key={`${product.id}-${index}`}
             to={`/product/${product.id}`}
             className="flex-shrink-0 group"
           >
-            <motion.div
-              className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden bg-card border-2 border-border/50 hover:border-primary/60 transition-all duration-300 shadow-md hover:shadow-xl relative"
-              whileHover={{ scale: 1.08, y: -8 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden bg-card border-2 border-border/50 hover:border-primary/60 transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105 hover:-translate-y-2 relative">
               <OptimizedImage
                 src={product.image_url}
                 alt={product.name}
@@ -71,10 +72,10 @@ export const ProductShowcaseCarousel = () => {
                   -{product.discount_percentage}%
                 </div>
               )}
-            </motion.div>
+            </div>
           </Link>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 };
