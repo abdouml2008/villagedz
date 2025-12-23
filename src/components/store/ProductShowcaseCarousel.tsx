@@ -39,7 +39,7 @@ export const ProductShowcaseCarousel = () => {
       <div 
         className="flex gap-4 md:gap-6"
         style={{
-          animation: 'scroll-rtl 30s linear infinite',
+          animation: 'scroll-rtl 10s linear infinite',
           animationPlayState: isPaused ? 'paused' : 'running',
           width: 'max-content',
         }}
