@@ -61,7 +61,7 @@ export function Logo({ className = '', showText = true }: LogoProps) {
       {/* Logo Text */}
       {showText && (
         <div className="flex flex-col">
-          <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-none tracking-tight">
+          <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-tight tracking-tight">
             Village
           </span>
           <span className="text-[10px] md:text-xs text-muted-foreground font-medium tracking-wider">
