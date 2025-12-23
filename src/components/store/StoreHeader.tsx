@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, Menu, X, Settings, LogIn, Search } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useState } from 'react';
@@ -21,6 +21,19 @@ export function StoreHeader() {
   const { hasRole } = useHasAnyRole();
   const { language } = useLanguage();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const scrollToAllProducts = () => {
+    if (location.pathname === '/') {
+      document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById('all-products')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -49,6 +62,12 @@ export function StoreHeader() {
                   {language === 'ar' ? category.name_ar : category.name}
                 </Link>
               ))}
+              <button
+                onClick={scrollToAllProducts}
+                className="text-foreground hover:text-primary transition-colors font-medium relative py-1 after:absolute after:bottom-0 after:start-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
+              >
+                {language === 'ar' ? 'كل المنتجات' : 'All Products'}
+              </button>
             </nav>
 
             <div className="flex items-center gap-1 lg:gap-2">
@@ -86,7 +105,7 @@ export function StoreHeader() {
 
         {menuOpen && (
           <nav className="md:hidden mt-4 pb-4 flex flex-col gap-4 border-t border-border pt-4">
-            {categories.map((category) => (
+              {categories.map((category) => (
               <Link 
                 key={category.id}
                 to={`/category/${category.slug}`} 
@@ -96,7 +115,16 @@ export function StoreHeader() {
                 {language === 'ar' ? category.name_ar : category.name}
               </Link>
             ))}
-            <Link 
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                scrollToAllProducts();
+              }}
+              className="text-foreground hover:text-primary transition-colors font-medium text-start"
+            >
+              {language === 'ar' ? 'كل المنتجات' : 'All Products'}
+            </button>
+            <Link
               to={hasRole ? "/admin/dashboard" : "/admin"} 
               className="text-primary hover:text-primary/80 transition-colors font-medium flex items-center gap-2"
               onClick={() => setMenuOpen(false)}
