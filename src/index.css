@@ -164,6 +164,13 @@
   0%, 100% { box-shadow: 0 0 20px hsl(25 85% 55% / 0.3); }
   50% { box-shadow: 0 0 40px hsl(25 85% 55% / 0.5); }
 }
+
+@keyframes scroll-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.33%); }
+}
+
+--animate-scroll-rtl: scroll-rtl 30s linear infinite;
 }
 
 @layer base {
