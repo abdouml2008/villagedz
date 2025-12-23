@@ -3,6 +3,8 @@ import { getSupabase } from '@/hooks/useSupabase';
 import { Product } from '@/types/store';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { queryConfig } from '@/lib/queryConfig';
 
 export const ProductShowcaseCarousel = () => {
   const { data: products } = useQuery({
@@ -17,7 +19,8 @@ export const ProductShowcaseCarousel = () => {
         .limit(12);
       if (error) throw error;
       return data as Product[];
-    }
+    },
+    ...queryConfig.dynamic,
   });
 
   if (!products || products.length === 0) return null;
@@ -49,10 +52,11 @@ export const ProductShowcaseCarousel = () => {
               whileHover={{ scale: 1.08, y: -8 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <img
-                src={product.image_url || '/placeholder.svg'}
+              <OptimizedImage
+                src={product.image_url}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                className="group-hover:scale-110 transition-transform duration-500"
+                aspectRatio="auto"
               />
               
               {/* Hover overlay with product info */}

@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryConfig } from '@/lib/queryConfig';
 
 export function StoreHeader() {
   const { totalItems } = useCart();
@@ -22,14 +23,13 @@ export function StoreHeader() {
   const { t } = useTranslation();
 
   const { data: categories = [] } = useQuery({
-    queryKey: ['header-categories'],
+    queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*');
       if (error) throw error;
       return data;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    ...queryConfig.static,
   });
 
   return (
