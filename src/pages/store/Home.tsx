@@ -236,6 +236,26 @@ export default function Home() {
                 {t.home.noCategories}
               </div>
             )}
+            
+            {/* All Products Button */}
+            <motion.div variants={fadeInUp}>
+              <button
+                onClick={() => {
+                  document.getElementById('all-products')?.scrollIntoView({ 
+                    behavior: 'smooth' 
+                  });
+                }}
+                className="group relative bg-card rounded-2xl p-6 md:p-8 lg:p-10 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border overflow-hidden w-full"
+              >
+                <div className="absolute inset-0 gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+                <span className="text-5xl md:text-6xl lg:text-7xl mb-4 block group-hover:scale-110 transition-transform duration-300">
+                  🛍️
+                </span>
+                <h3 className="text-lg md:text-xl lg:text-2xl font-semibold group-hover:text-primary transition-colors">
+                  {language === 'ar' ? 'كل المنتجات' : 'All Products'}
+                </h3>
+              </button>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -360,7 +380,7 @@ export default function Home() {
       <CustomerTestimonials />
 
       {/* All Products Section */}
-      <section className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative">
+      <section id="all-products" className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative">
         <div className="container mx-auto">
           <motion.div
             className="flex items-center justify-center gap-3 mb-4"
