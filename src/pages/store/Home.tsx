@@ -128,7 +128,7 @@ export default function Home() {
           {/* Title */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-6 lg:mb-8">
             {t.home.welcome}{' '}
-            <span className="text-gradient drop-shadow-lg inline-block pb-2">
+            <span className="text-gradient drop-shadow-lg inline-block pb-4">
               Village
             </span>
           </h1>
