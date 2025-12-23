@@ -77,13 +77,13 @@ export function ProductCard({ product, showBadges = true }: ProductCardProps) {
           className={`group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'opacity-60' : ''}`}
         />
       </Link>
-      <div className="p-4" style={{ transform: 'translateZ(20px)' }}>
+      <div className="p-4 lg:p-5" style={{ transform: 'translateZ(20px)' }}>
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-1">
+          <h3 className="font-semibold text-base lg:text-lg mb-2 hover:text-primary transition-colors line-clamp-1">
             {product.name}
           </h3>
         </Link>
-        <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{product.description}</p>
+        <p className="text-muted-foreground text-sm lg:text-base mb-3 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             {hasDiscount ? (

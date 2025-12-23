@@ -60,15 +60,15 @@ export function StoreFooter() {
   const emailLink = contactInfo.find(link => link.platform === 'email');
 
   return (
-    <footer className="relative bg-card border-t border-border mt-16 overflow-hidden">
+    <footer className="relative bg-card border-t border-border mt-16 lg:mt-24 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       </div>
       
-      <div className="container mx-auto px-4 py-12 relative">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 lg:px-8 xl:px-12 py-12 lg:py-16 relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 lg:gap-12">
           {/* Logo Section - without social icons */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-4">

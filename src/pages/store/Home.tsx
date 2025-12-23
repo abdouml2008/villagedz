@@ -124,38 +124,38 @@ export default function Home() {
         <div className="absolute bottom-1/4 left-1/4 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />
         
         {/* Content */}
-        <div className="container mx-auto text-center relative z-10 px-4 py-24">
+        <div className="container mx-auto text-center relative z-10 px-4 lg:px-8 py-24 lg:py-32">
           {/* Title */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-6 lg:mb-8">
             {t.home.welcome}{' '}
             <span className="text-gradient drop-shadow-lg inline-block">
               Village
             </span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-10 lg:mb-12 max-w-2xl lg:max-w-3xl mx-auto">
             {t.home.heroDescription}
           </p>
           
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center">
             <Link 
               to="/category/men" 
-              className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-10 py-5 rounded-2xl font-semibold text-lg hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
+              className="group inline-flex items-center justify-center gap-2 gradient-primary text-primary-foreground px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg lg:text-xl hover:opacity-90 transition-all shadow-glow hover:shadow-lg hover:-translate-y-1"
             >
               {t.home.shopNow}
-              <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowIcon className="w-5 h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               to="/category/women" 
-              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-10 py-5 rounded-2xl font-semibold text-lg border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg lg:text-xl border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
             >
               {t.home.browseCollection}
             </Link>
           </div>
           
           {/* Product Showcase & Stats */}
-          <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
+          <div className="mt-16 md:mt-20 lg:mt-24 max-w-5xl xl:max-w-6xl mx-auto">
             {/* Product Carousel */}
             <div className="mb-8">
               <p className="text-center text-sm text-muted-foreground mb-4">
@@ -189,50 +189,50 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="py-20 px-4 relative">
+      <section className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative">
         <div className="container mx-auto">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-12 lg:mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeInUp}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.shopByCategory}</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{t.home.shopByCategory}</h2>
             <p className="text-muted-foreground">{t.home.chooseFromCollection}</p>
           </motion.div>
           
           <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5 lg:gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
             variants={staggerContainer}
           >
             {categoriesLoading ? (
-              [...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card rounded-2xl p-8 h-44 animate-pulse" />
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="bg-card rounded-2xl p-8 h-44 lg:h-52 animate-pulse" />
               ))
             ) : categories && categories.length > 0 ? (
               categories.map((category, index) => (
                 <motion.div key={category.id} variants={fadeInUp}>
                   <Link
                     to={`/category/${category.slug}`}
-                    className="group relative bg-card rounded-2xl p-6 md:p-8 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border overflow-hidden block"
+                    className="group relative bg-card rounded-2xl p-6 md:p-8 lg:p-10 text-center shadow-village-sm hover:shadow-village-lg transition-all duration-300 border border-border overflow-hidden block"
                   >
                     {/* Hover Background */}
                     <div className="absolute inset-0 gradient-primary opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
                     
-                    <span className="text-5xl md:text-6xl mb-4 block group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
-                    <h3 className="text-lg md:text-xl font-semibold group-hover:text-primary transition-colors">
+                    <span className="text-5xl md:text-6xl lg:text-7xl mb-4 block group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
+                    <h3 className="text-lg md:text-xl lg:text-2xl font-semibold group-hover:text-primary transition-colors">
                       {language === 'ar' ? category.name_ar : category.name}
                     </h3>
                   </Link>
                 </motion.div>
               ))
             ) : (
-              <div className="col-span-4 text-center py-8 text-muted-foreground">
+              <div className="col-span-full text-center py-8 text-muted-foreground">
                 {t.home.noCategories}
               </div>
             )}
@@ -241,7 +241,7 @@ export default function Home() {
       </section>
 
       {discountedProducts.length > 0 && (
-        <section className="py-20 px-4 relative bg-destructive/5 overflow-hidden">
+        <section className="py-20 lg:py-24 px-4 lg:px-8 relative bg-destructive/5 overflow-hidden">
           {/* Animated Background */}
           <div className="absolute inset-0">
             <div className="absolute top-0 left-1/4 w-64 h-64 bg-destructive/10 rounded-full blur-[100px] animate-pulse" />
@@ -256,9 +256,9 @@ export default function Home() {
               viewport={{ once: true }}
               variants={fadeInUp}
             >
-              <Flame className="w-8 h-8 text-destructive animate-bounce" />
-              <h2 className="text-3xl md:text-4xl font-bold">{t.home.specialOffers}</h2>
-              <Flame className="w-8 h-8 text-destructive animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <Flame className="w-8 h-8 lg:w-10 lg:h-10 text-destructive animate-bounce" />
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">{t.home.specialOffers}</h2>
+              <Flame className="w-8 h-8 lg:w-10 lg:h-10 text-destructive animate-bounce" style={{ animationDelay: '0.2s' }} />
             </motion.div>
             <motion.p 
               className="text-center text-muted-foreground mb-12"
@@ -279,9 +279,11 @@ export default function Home() {
               navigation
               autoplay={{ delay: 3000, disableOnInteraction: false }}
               breakpoints={{
-                640: { slidesPerView: 2.2 },
-                768: { slidesPerView: 3.2 },
-                1024: { slidesPerView: 4.2 },
+                640: { slidesPerView: 2.2, spaceBetween: 16 },
+                768: { slidesPerView: 3.2, spaceBetween: 20 },
+                1024: { slidesPerView: 4.2, spaceBetween: 24 },
+                1280: { slidesPerView: 5.2, spaceBetween: 24 },
+                1536: { slidesPerView: 6.2, spaceBetween: 24 },
               }}
               className="pb-4"
               dir={isRTL ? 'rtl' : 'ltr'}
@@ -297,7 +299,7 @@ export default function Home() {
       )}
 
       {/* Featured Products */}
-      <section className="py-20 px-4 relative bg-secondary/30 overflow-hidden">
+      <section className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative bg-secondary/30 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
@@ -311,8 +313,8 @@ export default function Home() {
             viewport={{ once: true }}
             variants={fadeInUp}
           >
-            <Sparkles className="w-7 h-7 text-accent" />
-            <h2 className="text-3xl md:text-4xl font-bold">{t.home.latestProducts}</h2>
+            <Sparkles className="w-7 h-7 lg:w-8 lg:h-8 text-accent" />
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">{t.home.latestProducts}</h2>
           </motion.div>
           <motion.p 
             className="text-center text-muted-foreground mb-12"
@@ -324,12 +326,13 @@ export default function Home() {
           >
             {t.home.discoverLatest}
           </motion.p>
-          
+
+
           {productsLoading ? (
             <ProductGridSkeleton count={4} />
           ) : featuredProducts.length > 0 ? (
             <motion.div 
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-5 lg:gap-6"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
@@ -357,7 +360,7 @@ export default function Home() {
       <CustomerTestimonials />
 
       {/* All Products Section */}
-      <section className="py-20 px-4 relative">
+      <section className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative">
         <div className="container mx-auto">
           <motion.div
             className="flex items-center justify-center gap-3 mb-4"
@@ -366,8 +369,8 @@ export default function Home() {
             viewport={{ once: true }}
             variants={fadeInUp}
           >
-            <Package className="w-7 h-7 text-primary" />
-            <h2 className="text-3xl md:text-4xl font-bold">{t.home.allProducts}</h2>
+            <Package className="w-7 h-7 lg:w-8 lg:h-8 text-primary" />
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold">{t.home.allProducts}</h2>
           </motion.div>
           <motion.p 
             className="text-center text-muted-foreground mb-12"
@@ -385,7 +388,7 @@ export default function Home() {
           ) : displayedProducts.length > 0 ? (
             <>
               <motion.div 
-                className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-5 lg:gap-6"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-50px" }}

@@ -35,23 +35,23 @@ export function StoreHeader() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-village-sm">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 lg:px-8 xl:px-12 py-3 lg:py-4">
           <div className="flex items-center justify-between">
             <Logo />
 
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10">
               {categories.map((category) => (
                 <Link 
                   key={category.id}
                   to={`/category/${category.slug}`} 
-                  className="text-foreground hover:text-primary transition-colors font-medium"
+                  className="text-foreground hover:text-primary transition-colors font-medium relative py-1 after:absolute after:bottom-0 after:start-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full"
                 >
                   {language === 'ar' ? category.name_ar : category.name}
                 </Link>
               ))}
             </nav>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 lg:gap-2">
               <Button 
                 variant="ghost" 
                 size="icon" 

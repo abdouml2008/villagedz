@@ -34,14 +34,14 @@ export function CustomerTestimonials() {
   if (isLoading || !reviews || reviews.length === 0) return null;
 
   return (
-    <section className="py-20 px-4 relative bg-secondary/30">
+    <section className="py-20 lg:py-24 xl:py-28 px-4 lg:px-8 relative bg-secondary/30">
       <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.home.customerReviews}</h2>
-          <p className="text-muted-foreground">{t.home.whatCustomersSay}</p>
+        <div className="text-center mb-12 lg:mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{t.home.customerReviews}</h2>
+          <p className="text-muted-foreground lg:text-lg">{t.home.whatCustomersSay}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
           {reviews.map((review, index) => (
             <motion.div
               key={review.id}
