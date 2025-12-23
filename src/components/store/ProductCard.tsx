@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '@/types/store';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { ShoppingCart, Sparkles, Percent, AlertTriangle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { use3DTilt } from '@/hooks/use3DTilt';
@@ -69,19 +70,12 @@ export function ProductCard({ product, showBadges = true }: ProductCardProps) {
       )}
 
       <Link to={`/product/${product.id}`} className="block">
-        <div className="aspect-square overflow-hidden bg-muted relative">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'opacity-60' : ''}`}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              {t.product.noImageAvailable}
-            </div>
-          )}
-        </div>
+        <OptimizedImage
+          src={product.image_url}
+          alt={product.name}
+          aspectRatio="square"
+          className={`group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'opacity-60' : ''}`}
+        />
       </Link>
       <div className="p-4" style={{ transform: 'translateZ(20px)' }}>
         <Link to={`/product/${product.id}`}>

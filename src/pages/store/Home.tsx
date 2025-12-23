@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/hooks/useSupabase';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
+import { ProductGridSkeleton } from '@/components/store/ProductCardSkeleton';
 import { PromoBanner } from '@/components/store/PromoBanner';
 import { CustomerTestimonials } from '@/components/store/CustomerTestimonials';
 import { FloatingParticles } from '@/components/store/FloatingParticles';
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { queryConfig } from '@/lib/queryConfig';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
@@ -42,46 +44,12 @@ export default function Home() {
       if (error) throw error;
       return data as Category[];
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    ...queryConfig.static,
   });
 
-  // Featured/Latest Products (8 items)
-  const { data: featuredProducts, isLoading: featuredLoading } = useQuery({
-    queryKey: ['featured-products'],
-    queryFn: async () => {
-      const client = await getSupabase();
-      const { data, error } = await client
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(8);
-      if (error) throw error;
-      return data as Product[];
-    }
-  });
-
-  // Discounted Products (Special Offers)
-  const { data: discountedProducts } = useQuery({
-    queryKey: ['discounted-products'],
-    queryFn: async () => {
-      const client = await getSupabase();
-      const { data, error } = await client
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .gt('discount_percentage', 0)
-        .order('discount_percentage', { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data as Product[];
-    }
-  });
-
-  // All Products with pagination
-  const { data: allProducts, isLoading: allProductsLoading } = useQuery({
-    queryKey: ['all-products'],
+  // Fetch all products in one query and filter locally
+  const { data: allProductsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['products-home'],
     queryFn: async () => {
       const client = await getSupabase();
       const { data, error } = await client
@@ -91,28 +59,24 @@ export default function Home() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Product[];
-    }
+    },
+    ...queryConfig.dynamic,
   });
 
-  const { data: totalProducts } = useQuery({
-    queryKey: ['total-products'],
-    queryFn: async () => {
-      const client = await getSupabase();
-      const { count, error } = await client
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-      if (error) throw error;
-      return count || 0;
-    }
-  });
+  // Derived data from the single query - no extra API calls
+  const featuredProducts = allProductsData?.slice(0, 8) || [];
+  const discountedProducts = allProductsData?.filter(p => p.discount_percentage && p.discount_percentage > 0)
+    .sort((a, b) => (b.discount_percentage || 0) - (a.discount_percentage || 0))
+    .slice(0, 10) || [];
+  const allProducts = allProductsData || [];
+  const totalProducts = allProductsData?.length || 0;
 
   const handleLoadMore = () => {
     setVisibleProducts(prev => prev + PRODUCTS_PER_PAGE);
   };
 
-  const displayedProducts = allProducts?.slice(0, visibleProducts) || [];
-  const hasMoreProducts = allProducts && visibleProducts < allProducts.length;
+  const displayedProducts = allProducts.slice(0, visibleProducts);
+  const hasMoreProducts = visibleProducts < allProducts.length;
 
   // Animation variants
   const fadeInUp = {
@@ -201,7 +165,7 @@ export default function Home() {
             </div>
             
             {/* Animated Stats */}
-            <AnimatedStats totalProducts={totalProducts || 0} />
+            <AnimatedStats totalProducts={totalProducts} />
           </div>
         </div>
         
@@ -276,8 +240,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Special Offers Section */}
-      {discountedProducts && discountedProducts.length > 0 && (
+      {discountedProducts.length > 0 && (
         <section className="py-20 px-4 relative bg-destructive/5 overflow-hidden">
           {/* Animated Background */}
           <div className="absolute inset-0">
@@ -362,13 +325,9 @@ export default function Home() {
             {t.home.discoverLatest}
           </motion.p>
           
-          {featuredLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
-              ))}
-            </div>
-          ) : featuredProducts && featuredProducts.length > 0 ? (
+          {productsLoading ? (
+            <ProductGridSkeleton count={4} />
+          ) : featuredProducts.length > 0 ? (
             <motion.div 
               className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
               initial="hidden"
@@ -421,12 +380,8 @@ export default function Home() {
             {t.home.exploreAll}
           </motion.p>
           
-          {allProductsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-card rounded-xl h-80 animate-pulse" />
-              ))}
-            </div>
+          {productsLoading ? (
+            <ProductGridSkeleton count={8} />
           ) : displayedProducts.length > 0 ? (
             <>
               <motion.div 

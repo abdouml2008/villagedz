@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { queryConfig } from '@/lib/queryConfig';
 
 const getIconComponent = (iconName: string | null) => {
   switch (iconName) {
@@ -28,14 +29,13 @@ export function StoreFooter() {
   const { t } = useTranslation();
   
   const { data: categories = [] } = useQuery({
-    queryKey: ['footer-categories'],
+    queryKey: ['categories'],
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*');
       if (error) throw error;
       return data;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    ...queryConfig.static,
   });
 
   const { data: socialLinks = [] } = useQuery({
@@ -49,7 +49,7 @@ export function StoreFooter() {
       if (error) throw error;
       return data;
     },
-    staleTime: 60000,
+    ...queryConfig.social,
   });
 
   // Separate contact info (phone, email) from social media icons
