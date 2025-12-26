@@ -102,26 +102,38 @@ export default function Home() {
       
       {/* Hero Section - Simplified */}
       <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden">
-        {/* Parallax Background */}
+        {/* Abstract Geometric Background */}
         <motion.div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
+          className="absolute inset-0 will-change-transform"
           style={{ 
-            backgroundImage: 'url("/images/village-bg.png")',
             y: bgY,
             scale: bgScale,
           }}
-        />
+        >
+          {/* Base Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-primary/10" />
+          
+          {/* Geometric Shapes */}
+          <div className="absolute top-0 right-0 w-[60%] h-[70%] bg-gradient-to-bl from-primary/30 via-primary/10 to-transparent rounded-bl-[40%]" />
+          <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-village-charcoal/20 via-transparent to-transparent rounded-tr-[30%]" />
+          
+          {/* Accent Circles */}
+          <div className="absolute top-[20%] left-[10%] w-32 h-32 md:w-48 md:h-48 rounded-full bg-primary/15 blur-xl" />
+          <div className="absolute bottom-[30%] right-[15%] w-40 h-40 md:w-64 md:h-64 rounded-full bg-accent/10 blur-2xl" />
+          <div className="absolute top-[60%] left-[40%] w-24 h-24 md:w-32 md:h-32 rounded-full bg-primary/20 blur-lg" />
+          
+          {/* Grid Pattern Overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px'
+          }} />
+        </motion.div>
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
+        {/* Gradient Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background" />
         
         {/* Floating Particles */}
         <FloatingParticles />
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 left-1/4 w-[250px] h-[250px] bg-accent/10 rounded-full blur-[80px]" />
         
         {/* Content */}
         <div className="container mx-auto text-center relative z-10 px-4 lg:px-8 py-24 lg:py-32">
