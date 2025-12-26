@@ -252,9 +252,12 @@ export type Database = {
           category_id: string | null
           colors: string[] | null
           created_at: string
+          custom_home_delivery_price: number | null
+          custom_office_delivery_price: number | null
           description: string | null
           discount_percentage: number | null
           discount_quantity: number | null
+          home_delivery_enabled: boolean | null
           id: string
           image_url: string | null
           images: string[] | null
@@ -262,6 +265,7 @@ export type Database = {
           max_quantity: number | null
           min_quantity: number | null
           name: string
+          office_delivery_enabled: boolean | null
           price: number
           sizes: string[] | null
           stock: number | null
@@ -271,9 +275,12 @@ export type Database = {
           category_id?: string | null
           colors?: string[] | null
           created_at?: string
+          custom_home_delivery_price?: number | null
+          custom_office_delivery_price?: number | null
           description?: string | null
           discount_percentage?: number | null
           discount_quantity?: number | null
+          home_delivery_enabled?: boolean | null
           id?: string
           image_url?: string | null
           images?: string[] | null
@@ -281,6 +288,7 @@ export type Database = {
           max_quantity?: number | null
           min_quantity?: number | null
           name: string
+          office_delivery_enabled?: boolean | null
           price: number
           sizes?: string[] | null
           stock?: number | null
@@ -290,9 +298,12 @@ export type Database = {
           category_id?: string | null
           colors?: string[] | null
           created_at?: string
+          custom_home_delivery_price?: number | null
+          custom_office_delivery_price?: number | null
           description?: string | null
           discount_percentage?: number | null
           discount_quantity?: number | null
+          home_delivery_enabled?: boolean | null
           id?: string
           image_url?: string | null
           images?: string[] | null
@@ -300,6 +311,7 @@ export type Database = {
           max_quantity?: number | null
           min_quantity?: number | null
           name?: string
+          office_delivery_enabled?: boolean | null
           price?: number
           sizes?: string[] | null
           stock?: number | null

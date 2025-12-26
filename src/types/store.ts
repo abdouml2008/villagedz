@@ -23,6 +23,10 @@ export interface Product {
   max_quantity: number | null;
   discount_quantity: number | null;
   discount_percentage: number | null;
+  custom_home_delivery_price: number | null;
+  custom_office_delivery_price: number | null;
+  home_delivery_enabled: boolean;
+  office_delivery_enabled: boolean;
   created_at: string;
   updated_at: string;
   category?: Category;

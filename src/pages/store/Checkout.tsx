@@ -66,6 +66,28 @@ export default function Checkout() {
     return cartItems;
   }, [directItem, cartItems]);
 
+  // Check delivery availability based on cart items
+  const deliveryAvailability = useMemo(() => {
+    let homeEnabled = true;
+    let officeEnabled = true;
+    
+    for (const item of items) {
+      if (item.product.home_delivery_enabled === false) homeEnabled = false;
+      if (item.product.office_delivery_enabled === false) officeEnabled = false;
+    }
+    
+    return { homeEnabled, officeEnabled };
+  }, [items]);
+
+  // Auto-select available delivery type
+  useEffect(() => {
+    if (!deliveryAvailability.officeEnabled && deliveryAvailability.homeEnabled) {
+      setForm(prev => ({ ...prev, deliveryType: 'home' }));
+    } else if (!deliveryAvailability.homeEnabled && deliveryAvailability.officeEnabled) {
+      setForm(prev => ({ ...prev, deliveryType: 'office' }));
+    }
+  }, [deliveryAvailability]);
+
   const { totalPrice, totalDiscount } = useMemo(() => {
     if (directItem) {
       const priceInfo = getItemPrice(directItem);
@@ -97,9 +119,32 @@ export default function Checkout() {
   });
 
   const selectedWilaya = wilayas?.find(w => w.id.toString() === form.wilayaId);
-  const deliveryPrice = selectedWilaya 
-    ? (form.deliveryType === 'home' ? selectedWilaya.home_delivery_price : selectedWilaya.office_delivery_price)
-    : 0;
+  
+  // Calculate delivery price with custom product prices
+  const deliveryPrice = useMemo(() => {
+    if (!selectedWilaya) return 0;
+    
+    // Check if any product has custom delivery price
+    let maxCustomPrice = 0;
+    let hasCustomPrice = false;
+    
+    for (const item of items) {
+      if (form.deliveryType === 'home' && item.product.custom_home_delivery_price !== null) {
+        hasCustomPrice = true;
+        maxCustomPrice = Math.max(maxCustomPrice, item.product.custom_home_delivery_price);
+      } else if (form.deliveryType === 'office' && item.product.custom_office_delivery_price !== null) {
+        hasCustomPrice = true;
+        maxCustomPrice = Math.max(maxCustomPrice, item.product.custom_office_delivery_price);
+      }
+    }
+    
+    if (hasCustomPrice) return maxCustomPrice;
+    
+    return form.deliveryType === 'home' 
+      ? selectedWilaya.home_delivery_price 
+      : selectedWilaya.office_delivery_price;
+  }, [selectedWilaya, form.deliveryType, items]);
+  
   const finalTotal = totalPrice - couponDiscount + deliveryPrice;
 
   const applyCoupon = async () => {
@@ -310,22 +355,32 @@ export default function Checkout() {
 
             <div>
               <Label>{t.checkout.deliveryType}</Label>
-              <RadioGroup value={form.deliveryType} onValueChange={v => setForm({...form, deliveryType: v as 'home' | 'office'})} className="mt-2">
-                <div className="flex items-center space-x-reverse space-x-3 p-4 border border-border rounded-lg">
-                  <RadioGroupItem value="office" id="office" />
-                  <Label htmlFor="office" className="flex-1 cursor-pointer">
-                    <span className="font-medium">{t.checkout.officeDelivery}</span>
-                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.office_delivery_price || 400} {t.common.currency}</span>
-                  </Label>
+              {!deliveryAvailability.homeEnabled && !deliveryAvailability.officeEnabled ? (
+                <div className="mt-2 p-4 bg-destructive/10 text-destructive rounded-lg text-center">
+                  التوصيل غير متاح لهذه المنتجات
                 </div>
-                <div className="flex items-center space-x-reverse space-x-3 p-4 border border-border rounded-lg">
-                  <RadioGroupItem value="home" id="home" />
-                  <Label htmlFor="home" className="flex-1 cursor-pointer">
-                    <span className="font-medium">{t.checkout.homeDelivery}</span>
-                    <span className="block text-sm text-muted-foreground">{selectedWilaya?.home_delivery_price || 600} {t.common.currency}</span>
-                  </Label>
-                </div>
-              </RadioGroup>
+              ) : (
+                <RadioGroup value={form.deliveryType} onValueChange={v => setForm({...form, deliveryType: v as 'home' | 'office'})} className="mt-2 space-y-2">
+                  {deliveryAvailability.officeEnabled && (
+                    <div className={`flex items-center space-x-reverse space-x-3 p-4 border rounded-lg transition-colors ${form.deliveryType === 'office' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                      <RadioGroupItem value="office" id="office" />
+                      <Label htmlFor="office" className="flex-1 cursor-pointer">
+                        <span className="font-medium">{t.checkout.officeDelivery}</span>
+                        <span className="block text-sm text-muted-foreground">{selectedWilaya?.office_delivery_price || 400} {t.common.currency}</span>
+                      </Label>
+                    </div>
+                  )}
+                  {deliveryAvailability.homeEnabled && (
+                    <div className={`flex items-center space-x-reverse space-x-3 p-4 border rounded-lg transition-colors ${form.deliveryType === 'home' ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                      <RadioGroupItem value="home" id="home" />
+                      <Label htmlFor="home" className="flex-1 cursor-pointer">
+                        <span className="font-medium">{t.checkout.homeDelivery}</span>
+                        <span className="block text-sm text-muted-foreground">{selectedWilaya?.home_delivery_price || 600} {t.common.currency}</span>
+                      </Label>
+                    </div>
+                  )}
+                </RadioGroup>
+              )}
             </div>
           </div>
 
