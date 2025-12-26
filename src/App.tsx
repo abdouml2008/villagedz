@@ -17,6 +17,7 @@ const ProductDetail = lazy(() => import("./pages/store/ProductDetail"));
 const Cart = lazy(() => import("./pages/store/Cart"));
 const Checkout = lazy(() => import("./pages/store/Checkout"));
 const TrackOrder = lazy(() => import("./pages/store/TrackOrder"));
+const OrderConfirmation = lazy(() => import("./pages/store/OrderConfirmation"));
 const AdminLogin = lazy(() => import("./pages/admin/Login"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminProducts = lazy(() => import("./pages/admin/Products"));
@@ -59,6 +60,7 @@ const App = () => {
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/track-order" element={<TrackOrder />} />
+                      <Route path="/order-confirmation" element={<OrderConfirmation />} />
                       <Route path="/admin" element={<AdminLogin />} />
                       <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                       <Route path="/admin/products" element={<AdminRoute section="products"><AdminProducts /></AdminRoute>} />
