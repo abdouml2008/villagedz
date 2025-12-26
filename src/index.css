@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Village Store Design System */
+/* Village Store Design System - Turquoise & Charcoal Theme */
 
 @font-face {
   font-family: 'Cairo';
@@ -9,74 +9,74 @@
 }
 
 :root {
-  --background: hsl(30 20% 98%);
-  --foreground: hsl(20 10% 15%);
+  --background: hsl(170 10% 98%);
+  --foreground: hsl(0 0% 18%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(20 10% 15%);
+  --card-foreground: hsl(0 0% 18%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(20 10% 15%);
-  --primary: hsl(25 85% 55%);
+  --popover-foreground: hsl(0 0% 18%);
+  --primary: hsl(170 45% 22%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(35 60% 95%);
-  --secondary-foreground: hsl(20 10% 15%);
-  --muted: hsl(30 20% 96%);
-  --muted-foreground: hsl(20 10% 45%);
-  --accent: hsl(160 60% 45%);
+  --secondary: hsl(170 20% 95%);
+  --secondary-foreground: hsl(0 0% 18%);
+  --muted: hsl(170 10% 96%);
+  --muted-foreground: hsl(0 0% 40%);
+  --accent: hsl(170 50% 30%);
   --accent-foreground: hsl(0 0% 100%);
   --destructive: hsl(0 75% 55%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(30 15% 88%);
-  --input: hsl(30 15% 88%);
-  --ring: hsl(25 85% 55%);
+  --border: hsl(170 10% 88%);
+  --input: hsl(170 10% 88%);
+  --ring: hsl(170 45% 22%);
   --radius: 0.75rem;
 
   /* Village Custom Colors */
-  --village-orange: hsl(25 85% 55%);
-  --village-orange-dark: hsl(25 85% 45%);
-  --village-green: hsl(160 60% 45%);
-  --village-green-dark: hsl(160 60% 35%);
-  --village-brown: hsl(20 30% 30%);
-  --village-cream: hsl(35 60% 95%);
-  --village-sand: hsl(30 25% 90%);
+  --village-primary: hsl(170 45% 22%);
+  --village-primary-light: hsl(170 45% 32%);
+  --village-primary-dark: hsl(170 45% 15%);
+  --village-charcoal: hsl(0 0% 18%);
+  --village-charcoal-light: hsl(0 0% 28%);
+  --village-cream: hsl(170 20% 95%);
+  --village-sand: hsl(170 15% 92%);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, hsl(25 85% 55%), hsl(35 80% 50%));
-  --gradient-hero: linear-gradient(180deg, hsl(30 20% 98%) 0%, hsl(35 60% 95%) 100%);
-  --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(30 20% 98%) 100%);
+  --gradient-primary: linear-gradient(135deg, hsl(170 45% 22%), hsl(170 50% 30%));
+  --gradient-hero: linear-gradient(180deg, hsl(170 10% 98%) 0%, hsl(170 20% 95%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(170 10% 98%) 100%);
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px hsl(20 30% 30% / 0.06);
-  --shadow-md: 0 4px 16px hsl(20 30% 30% / 0.1);
-  --shadow-lg: 0 8px 32px hsl(20 30% 30% / 0.12);
-  --shadow-glow: 0 0 24px hsl(25 85% 55% / 0.25);
+  --shadow-sm: 0 2px 8px hsl(0 0% 18% / 0.06);
+  --shadow-md: 0 4px 16px hsl(0 0% 18% / 0.1);
+  --shadow-lg: 0 8px 32px hsl(0 0% 18% / 0.12);
+  --shadow-glow: 0 0 24px hsl(170 45% 22% / 0.25);
 }
 
 .dark {
-  --background: hsl(20 15% 8%);
-  --foreground: hsl(30 20% 95%);
-  --card: hsl(20 15% 12%);
-  --card-foreground: hsl(30 20% 95%);
-  --popover: hsl(20 15% 12%);
-  --popover-foreground: hsl(30 20% 95%);
-  --primary: hsl(25 85% 55%);
+  --background: hsl(0 0% 10%);
+  --foreground: hsl(170 10% 95%);
+  --card: hsl(0 0% 14%);
+  --card-foreground: hsl(170 10% 95%);
+  --popover: hsl(0 0% 14%);
+  --popover-foreground: hsl(170 10% 95%);
+  --primary: hsl(170 45% 35%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(20 15% 18%);
-  --secondary-foreground: hsl(30 20% 95%);
-  --muted: hsl(20 15% 15%);
-  --muted-foreground: hsl(30 15% 60%);
-  --accent: hsl(160 60% 45%);
+  --secondary: hsl(0 0% 18%);
+  --secondary-foreground: hsl(170 10% 95%);
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(170 10% 60%);
+  --accent: hsl(170 50% 40%);
   --accent-foreground: hsl(0 0% 100%);
   --destructive: hsl(0 65% 45%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(20 15% 20%);
-  --input: hsl(20 15% 20%);
-  --ring: hsl(25 85% 55%);
+  --border: hsl(0 0% 22%);
+  --input: hsl(0 0% 22%);
+  --ring: hsl(170 45% 35%);
 
   /* Village Custom Colors - Dark */
-  --village-cream: hsl(20 15% 15%);
-  --village-sand: hsl(20 15% 12%);
-  --gradient-hero: linear-gradient(180deg, hsl(20 15% 8%) 0%, hsl(20 15% 12%) 100%);
-  --gradient-card: linear-gradient(145deg, hsl(20 15% 14%) 0%, hsl(20 15% 10%) 100%);
+  --village-cream: hsl(0 0% 15%);
+  --village-sand: hsl(0 0% 12%);
+  --gradient-hero: linear-gradient(180deg, hsl(0 0% 10%) 0%, hsl(0 0% 14%) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(0 0% 16%) 0%, hsl(0 0% 12%) 100%);
 }
 
 @theme {
@@ -103,11 +103,11 @@
   --color-ring: var(--ring);
 
   /* Village Colors */
-  --color-village-orange: var(--village-orange);
-  --color-village-orange-dark: var(--village-orange-dark);
-  --color-village-green: var(--village-green);
-  --color-village-green-dark: var(--village-green-dark);
-  --color-village-brown: var(--village-brown);
+  --color-village-primary: var(--village-primary);
+  --color-village-primary-light: var(--village-primary-light);
+  --color-village-primary-dark: var(--village-primary-dark);
+  --color-village-charcoal: var(--village-charcoal);
+  --color-village-charcoal-light: var(--village-charcoal-light);
   --color-village-cream: var(--village-cream);
   --color-village-sand: var(--village-sand);
 
@@ -163,8 +163,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px hsl(25 85% 55% / 0.3); }
-  50% { box-shadow: 0 0 40px hsl(25 85% 55% / 0.5); }
+  0%, 100% { box-shadow: 0 0 20px hsl(170 45% 22% / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(170 45% 22% / 0.5); }
 }
 
 @keyframes scroll-rtl {
