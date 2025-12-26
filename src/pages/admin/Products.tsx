@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, X, Truck } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { Product, Category } from '@/types/store';
 import { logger } from '@/lib/logger';
 
@@ -24,7 +25,12 @@ export default function AdminProducts() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0' });
+  const [form, setForm] = useState({ 
+    name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', 
+    min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0',
+    custom_home_delivery_price: '', custom_office_delivery_price: '',
+    home_delivery_enabled: true, office_delivery_enabled: true
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -295,7 +301,11 @@ export default function AdminProducts() {
         max_quantity: data.max_quantity ? parseInt(data.max_quantity) : null,
         discount_quantity: data.discount_quantity ? parseInt(data.discount_quantity) : null,
         discount_percentage: data.discount_percentage ? parseFloat(data.discount_percentage) : null,
-        stock: data.stock ? parseInt(data.stock) : 0
+        stock: data.stock ? parseInt(data.stock) : 0,
+        custom_home_delivery_price: data.custom_home_delivery_price ? parseFloat(data.custom_home_delivery_price) : null,
+        custom_office_delivery_price: data.custom_office_delivery_price ? parseFloat(data.custom_office_delivery_price) : null,
+        home_delivery_enabled: data.home_delivery_enabled,
+        office_delivery_enabled: data.office_delivery_enabled
       };
       if (editProduct) {
         const { error } = await client.from('products').update(productData).eq('id', editProduct.id);
@@ -336,7 +346,12 @@ export default function AdminProducts() {
   });
 
   const resetForm = () => {
-    setForm({ name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0' });
+    setForm({ 
+      name: '', description: '', price: '', category_id: '', image_url: '', sizes: '', colors: '', 
+      min_quantity: '1', max_quantity: '', discount_quantity: '', discount_percentage: '', stock: '0',
+      custom_home_delivery_price: '', custom_office_delivery_price: '',
+      home_delivery_enabled: true, office_delivery_enabled: true
+    });
     setEditProduct(null);
     setImageFile(null);
     setImagePreview(null);
@@ -361,7 +376,11 @@ export default function AdminProducts() {
       max_quantity: product.max_quantity?.toString() || '',
       discount_quantity: product.discount_quantity?.toString() || '',
       discount_percentage: product.discount_percentage?.toString() || '',
-      stock: product.stock?.toString() || '0'
+      stock: product.stock?.toString() || '0',
+      custom_home_delivery_price: product.custom_home_delivery_price?.toString() || '',
+      custom_office_delivery_price: product.custom_office_delivery_price?.toString() || '',
+      home_delivery_enabled: product.home_delivery_enabled ?? true,
+      office_delivery_enabled: product.office_delivery_enabled ?? true
     });
     setImageFile(null);
     setImagePreview(null);
@@ -529,6 +548,64 @@ export default function AdminProducts() {
                   <div><Label>الحد الأدنى للكمية</Label><Input type="number" min="1" value={form.min_quantity} onChange={e => setForm({...form, min_quantity: e.target.value})} placeholder="1" /></div>
                   <div><Label>الحد الأقصى للكمية</Label><Input type="number" min="1" value={form.max_quantity} onChange={e => setForm({...form, max_quantity: e.target.value})} placeholder="غير محدود" /></div>
                 </div>
+                <div className="border-t border-border pt-4">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Truck className="w-4 h-4" />
+                    إعدادات التوصيل المخصصة
+                  </Label>
+                  <p className="text-sm text-muted-foreground mb-3">تخصيص أسعار وخيارات التوصيل لهذا المنتج</p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <Label>تفعيل التوصيل للمنزل</Label>
+                        <p className="text-xs text-muted-foreground">السماح بالتوصيل للمنزل لهذا المنتج</p>
+                      </div>
+                      <Switch 
+                        checked={form.home_delivery_enabled} 
+                        onCheckedChange={checked => setForm({...form, home_delivery_enabled: checked})} 
+                      />
+                    </div>
+                    
+                    {form.home_delivery_enabled && (
+                      <div>
+                        <Label>سعر التوصيل للمنزل (دج)</Label>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          value={form.custom_home_delivery_price} 
+                          onChange={e => setForm({...form, custom_home_delivery_price: e.target.value})} 
+                          placeholder="اتركه فارغاً لاستخدام السعر الافتراضي" 
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <Label>تفعيل التوصيل للمكتب</Label>
+                        <p className="text-xs text-muted-foreground">السماح بالتوصيل للمكتب لهذا المنتج</p>
+                      </div>
+                      <Switch 
+                        checked={form.office_delivery_enabled} 
+                        onCheckedChange={checked => setForm({...form, office_delivery_enabled: checked})} 
+                      />
+                    </div>
+                    
+                    {form.office_delivery_enabled && (
+                      <div>
+                        <Label>سعر التوصيل للمكتب (دج)</Label>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          value={form.custom_office_delivery_price} 
+                          onChange={e => setForm({...form, custom_office_delivery_price: e.target.value})} 
+                          placeholder="اتركه فارغاً لاستخدام السعر الافتراضي" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="border-t border-border pt-4">
                   <Label className="text-base font-semibold">خصم الكمية</Label>
                   <p className="text-sm text-muted-foreground mb-3">تطبيق خصم عند شراء كمية معينة أو أكثر</p>
