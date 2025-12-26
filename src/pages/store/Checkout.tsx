@@ -262,7 +262,7 @@ export default function Checkout() {
         clearCart();
       }
       toast.success(t.checkout.orderSuccess);
-      navigate('/');
+      navigate('/order-confirmation');
     } catch (error) {
       logger.error('Order submission error:', error);
       toast.error(t.checkout.orderError);
