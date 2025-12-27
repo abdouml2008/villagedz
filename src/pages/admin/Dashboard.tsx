@@ -7,7 +7,7 @@ import { useHasAnyRole } from '@/hooks/useHasAnyRole';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { LowStockAlert } from '@/components/admin/LowStockAlert';
-import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag, FolderOpen, Megaphone, MessageSquare, Share2 } from 'lucide-react';
+import { Package, ShoppingCart, LayoutDashboard, Users, Truck, BarChart3, Tag, FolderOpen, Megaphone, MessageSquare, Share2, BarChart } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -144,6 +144,11 @@ export default function AdminDashboard() {
             <Share2 className="w-12 h-12 text-blue-500 mb-4" />
             <h2 className="text-2xl font-bold mb-2">وسائل التواصل</h2>
             <p className="text-muted-foreground">إدارة روابط التواصل الاجتماعي</p>
+          </Link>
+          <Link to="/admin/tracking-pixels" className="bg-card rounded-xl p-8 shadow-village-sm border border-border hover:shadow-village-lg transition-shadow">
+            <BarChart className="w-12 h-12 text-purple-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">بيكسلات التتبع</h2>
+            <p className="text-muted-foreground">إدارة بيكسلات Meta و TikTok</p>
           </Link>
         </div>
       </div>
