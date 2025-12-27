@@ -14,6 +14,7 @@ export const ADMIN_SECTIONS = [
   { id: 'banners', name: 'البانرات الترويجية', nameEn: 'Banners' },
   { id: 'reviews', name: 'إدارة التقييمات', nameEn: 'Reviews' },
   { id: 'social-links', name: 'وسائل التواصل', nameEn: 'Social Links' },
+  { id: 'tracking-pixels', name: 'بيكسلات التتبع', nameEn: 'Tracking Pixels' },
 ] as const;
 
 export type AdminSection = typeof ADMIN_SECTIONS[number]['id'];

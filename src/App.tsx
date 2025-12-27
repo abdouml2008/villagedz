@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AdminRoute } from "@/components/auth/AdminRoute";
+import { TrackingPixels } from "@/components/tracking/TrackingPixels";
 import { lazy, Suspense } from "react";
 
 const Home = lazy(() => import("./pages/store/Home"));
@@ -31,6 +32,7 @@ const AdminBanners = lazy(() => import("./pages/admin/Banners"));
 const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const OrdersByStatus = lazy(() => import("./pages/admin/OrdersByStatus"));
 const AdminSocialLinks = lazy(() => import("./pages/admin/SocialLinks"));
+const AdminTrackingPixels = lazy(() => import("./pages/admin/TrackingPixels"));
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,7 @@ const App = () => {
           <AuthProvider>
             <CartProvider>
               <TooltipProvider>
+                <TrackingPixels />
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
@@ -74,6 +77,7 @@ const App = () => {
                       <Route path="/admin/banners" element={<AdminRoute section="banners"><AdminBanners /></AdminRoute>} />
                       <Route path="/admin/reviews" element={<AdminRoute section="reviews"><AdminReviews /></AdminRoute>} />
                       <Route path="/admin/social-links" element={<AdminRoute section="social-links"><AdminSocialLinks /></AdminRoute>} />
+                      <Route path="/admin/tracking-pixels" element={<AdminRoute section="tracking-pixels"><AdminTrackingPixels /></AdminRoute>} />
                     </Routes>
                   </Suspense>
                 </BrowserRouter>
