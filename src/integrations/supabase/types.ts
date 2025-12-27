@@ -471,23 +471,29 @@ export type Database = {
       }
       tracking_pixels: {
         Row: {
+          code: string | null
           created_at: string
           id: string
           is_active: boolean | null
+          name: string | null
           pixel_id: string
           platform: string
         }
         Insert: {
+          code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
+          name?: string | null
           pixel_id: string
           platform: string
         }
         Update: {
+          code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
+          name?: string | null
           pixel_id?: string
           platform?: string
         }

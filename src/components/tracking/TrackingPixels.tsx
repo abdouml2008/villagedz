@@ -6,6 +6,7 @@ interface TrackingPixel {
   id: string;
   platform: string;
   pixel_id: string;
+  code: string | null;
   is_active: boolean;
 }
 
@@ -28,15 +29,58 @@ export function TrackingPixels() {
     if (!pixels || pixels.length === 0) return;
 
     pixels.forEach((pixel) => {
-      if (pixel.platform === 'meta') {
-        initMetaPixel(pixel.pixel_id);
-      } else if (pixel.platform === 'tiktok') {
-        initTikTokPixel(pixel.pixel_id);
+      // If full code is provided, use it directly
+      if (pixel.code && pixel.code.trim()) {
+        injectRawCode(pixel.code, pixel.id);
+      } else if (pixel.pixel_id) {
+        // Otherwise use the pixel_id with platform-specific initialization
+        if (pixel.platform === 'meta') {
+          initMetaPixel(pixel.pixel_id);
+        } else if (pixel.platform === 'tiktok') {
+          initTikTokPixel(pixel.pixel_id);
+        }
       }
     });
   }, [pixels]);
 
   return null;
+}
+
+function injectRawCode(code: string, pixelId: string) {
+  // Check if already injected
+  const existingScript = document.getElementById(`tracking-pixel-${pixelId}`);
+  if (existingScript) return;
+
+  // Create a container div to parse the HTML
+  const container = document.createElement('div');
+  container.innerHTML = code;
+
+  // Extract and inject script tags
+  const scripts = container.querySelectorAll('script');
+  scripts.forEach((script, index) => {
+    const newScript = document.createElement('script');
+    newScript.id = `tracking-pixel-${pixelId}-${index}`;
+    
+    // Copy attributes
+    Array.from(script.attributes).forEach(attr => {
+      newScript.setAttribute(attr.name, attr.value);
+    });
+    
+    // Copy content
+    if (script.innerHTML) {
+      newScript.innerHTML = script.innerHTML;
+    }
+    
+    document.head.appendChild(newScript);
+  });
+
+  // Extract and inject noscript tags
+  const noscripts = container.querySelectorAll('noscript');
+  noscripts.forEach((noscript) => {
+    const newNoscript = document.createElement('noscript');
+    newNoscript.innerHTML = noscript.innerHTML;
+    document.body.appendChild(newNoscript);
+  });
 }
 
 function initMetaPixel(pixelId: string) {
