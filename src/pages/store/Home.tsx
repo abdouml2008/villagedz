@@ -125,14 +125,14 @@ export default function Home() {
         {/* Content */}
         <div className="container mx-auto text-center relative z-10 px-4 lg:px-8 py-24 lg:py-32">
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-6 lg:mb-8">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold mb-6 lg:mb-8 text-village-charcoal dark:text-white drop-shadow-md">
             {t.home.welcome}{' '}
             <span className="text-gradient drop-shadow-lg inline-block pb-4">
               Village
             </span>
           </h1>
           
-          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-10 lg:mb-12 max-w-2xl lg:max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-village-charcoal/80 dark:text-white/80 mb-10 lg:mb-12 max-w-2xl lg:max-w-3xl mx-auto drop-shadow-sm">
             {t.home.heroDescription}
           </p>
           
@@ -147,7 +147,7 @@ export default function Home() {
             </Link>
             <Link 
               to="/category/women" 
-              className="inline-flex items-center justify-center gap-2 bg-card/80 backdrop-blur-sm text-foreground px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg lg:text-xl border border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
+              className="inline-flex items-center justify-center gap-2 bg-white/90 dark:bg-card/80 backdrop-blur-sm text-village-charcoal dark:text-foreground px-8 sm:px-10 lg:px-12 py-4 sm:py-5 lg:py-6 rounded-2xl font-semibold text-base sm:text-lg lg:text-xl border border-village-charcoal/20 dark:border-border hover:border-primary transition-all hover:shadow-md hover:-translate-y-1"
             >
               {t.home.browseCollection}
             </Link>
